@@ -6,41 +6,52 @@ local PlaceId = game.PlaceId
 local JobId = game.JobId
 local player = Players.LocalPlayer
 
--- Hàm tìm text chứa "Servertime: HH:MM:SS"
+-- Hàm lấy phút từ Servertime hiển thị trên GUI
 local function getServerMinute()
     for _, gui in ipairs(player:WaitForChild("PlayerGui"):GetDescendants()) do
         if gui:IsA("TextLabel") then
             local text = gui.Text
             local hour, minute, second = string.match(text, "Servertime:%s*(%d+):(%d+):(%d+)")
             if hour and minute and second then
-                print("Giờ máy chủ:", hour, minute, second)
+                print("🕒 Giờ máy chủ:", hour, minute, second)
                 return tonumber(minute)
             end
         end
     end
-    warn("Không tìm thấy Servertime từ GUI.")
+    warn("⚠️ Không tìm thấy Servertime từ GUI.")
     return nil
 end
 
--- Hàm tìm server khác
+-- Hàm tìm server khác có slot trống và không trùng JobId
 local function getServer()
     local servers = {}
     local cursor = ""
 
     while true do
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. cursor
-        local response = game:HttpGet(url)
-        local data = HttpService:JSONDecode(response)
+        local success, response = pcall(function()
+            return game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. cursor)
+        end)
 
-        for _, server in ipairs(data.data) do
-            if server.playing < server.maxPlayers and server.id ~= JobId then
-                table.insert(servers, server.id)
+        if success then
+            local data = HttpService:JSONDecode(response)
+            if data and data.data then
+                for _, server in ipairs(data.data) do
+                    if server.playing < server.maxPlayers and server.id ~= JobId then
+                        table.insert(servers, server.id)
+                    end
+                end
+                if data.nextPageCursor then
+                    cursor = data.nextPageCursor
+                    wait(2) -- giảm tốc độ request để tránh bị rate limit
+                else
+                    break
+                end
+            else
+                warn("⚠️ Dữ liệu phản hồi không hợp lệ.")
+                break
             end
-        end
-
-        if data.nextPageCursor then
-            cursor = data.nextPageCursor
         else
+            warn("⚠️ Gặp lỗi khi gửi yêu cầu HTTP hoặc bị chặn.")
             break
         end
     end
@@ -52,16 +63,16 @@ local function getServer()
     end
 end
 
--- Kiểm tra và teleport nếu phù hợp
+-- Kiểm tra thời gian và hop server nếu cần
 local minute = getServerMinute()
 if minute and (minute < 10 or minute > 35) then
-    print("Phút máy chủ:", minute, " → Hop server.")
+    print("✅ Phút máy chủ:", minute, " → Tiến hành hop server.")
     local serverId = getServer()
     if serverId then
         TeleportService:TeleportToPlaceInstance(PlaceId, serverId, player)
     else
-        warn("Không tìm được server phù hợp.")
+        warn("⚠️ Không tìm được server phù hợp.")
     end
 else
-    print("Trong khoảng giờ boss (từ 10 đến 35 phút). Không hop server.")
+    print("⛔ Trong khoảng thời gian boss (10 → 35 phút). Không hop server.")
 end
