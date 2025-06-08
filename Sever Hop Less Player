@@ -6,46 +6,49 @@ local PlaceId = game.PlaceId
 local JobId = game.JobId
 local player = Players.LocalPlayer
 
-local function getLowestPopulationServer()
-    local lowestServer = nil
-    local lowestPlayers = math.huge
+local function getLeastPopulatedServer()
+    local leastPopulatedServerId = nil
+    local leastPlayers = math.huge
     local cursor = ""
 
     while true do
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. cursor
         local success, response = pcall(function()
-            return game:HttpGet(url)
+            return game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. cursor)
         end)
 
         if success then
             local data = HttpService:JSONDecode(response)
-
-            for _, server in ipairs(data.data) do
-                if server.playing < server.maxPlayers and server.id ~= JobId then
-                    if server.playing < lowestPlayers then
-                        lowestPlayers = server.playing
-                        lowestServer = server.id
+            if data and data.data then
+                for _, server in ipairs(data.data) do
+                    if server.playing < server.maxPlayers and server.id ~= JobId then
+                        if server.playing < leastPlayers then
+                            leastPlayers = server.playing
+                            leastPopulatedServerId = server.id
+                        end
                     end
                 end
-            end
-
-            if data.nextPageCursor then
-                cursor = data.nextPageCursor
+                if data.nextPageCursor then
+                    cursor = data.nextPageCursor
+                    wait(2) -- delay nhẹ để tránh rate-limit
+                else
+                    break
+                end
             else
+                warn("⚠️ Dữ liệu phản hồi không hợp lệ.")
                 break
             end
         else
-            warn("Lỗi lấy server:", response)
+            warn("⚠️ Gặp lỗi khi gửi yêu cầu HTTP hoặc bị chặn.")
             break
         end
     end
 
-    return lowestServer
+    return leastPopulatedServerId
 end
 
-local targetServer = getLowestPopulationServer()
-if targetServer then
-    TeleportService:TeleportToPlaceInstance(PlaceId, targetServer, player)
+local targetServerId = getLeastPopulatedServer()
+if targetServerId then
+    TeleportService:TeleportToPlaceInstance(PlaceId, targetServerId, player)
 else
-    warn("Không tìm được server nào phù hợp.")
+    warn("⚠️ Không tìm được server nào phù hợp.")
 end
