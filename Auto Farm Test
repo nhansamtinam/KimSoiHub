@@ -1,4 +1,3 @@
---Updated
 -- 📌 Kích hoạt qua biến toàn cục từ UI chính
 shared.autoFarm = shared.autoFarm or false -- Gán mặc định nếu chưa có
 
@@ -95,6 +94,7 @@ end
 
 -- 💥 Gọi kỹ năng trái
 local function castSkill(fruit, skill)
+    if not shared.autoFarm then return end
     if not fruit or not skill then return end
     if not isSkillReady(skill) then return end
 
@@ -148,6 +148,7 @@ end
 
 -- 📍 Dịch chuyển nhanh nếu đã vào game
 local function fastTeleport()
+    if not shared.autoFarm then return end
     local character = player.Character
     if not character then return end
     local hrp = character:FindFirstChild("HumanoidRootPart")
