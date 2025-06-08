@@ -11,19 +11,30 @@ local function getServer()
     local cursor = ""
 
     while true do
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. cursor
-        local response = game:HttpGet(url)
-        local data = HttpService:JSONDecode(response)
+        local success, response = pcall(function()
+            return game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. cursor)
+        end)
 
-        for _, server in ipairs(data.data) do
-            if server.playing < server.maxPlayers and server.id ~= JobId then
-                table.insert(servers, server.id)
+        if success then
+            local data = HttpService:JSONDecode(response)
+            if data and data.data then
+                for _, server in ipairs(data.data) do
+                    if server.playing < server.maxPlayers and server.id ~= JobId then
+                        table.insert(servers, server.id)
+                    end
+                end
+                if data.nextPageCursor then
+                    cursor = data.nextPageCursor
+                    wait(2) -- tăng delay
+                else
+                    break
+                end
+            else
+                warn("⚠️ Dữ liệu phản hồi không hợp lệ.")
+                break
             end
-        end
-
-        if data.nextPageCursor then
-            cursor = data.nextPageCursor
         else
+            warn("⚠️ Gặp lỗi khi gửi yêu cầu HTTP hoặc bị chặn.")
             break
         end
     end
@@ -39,5 +50,5 @@ local serverId = getServer()
 if serverId then
     TeleportService:TeleportToPlaceInstance(PlaceId, serverId, player)
 else
-    warn("Không tìm được server nào phù hợp.")
+    warn("⚠️ Không tìm được server nào phù hợp.")
 end
