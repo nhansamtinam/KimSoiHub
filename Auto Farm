@@ -101,8 +101,8 @@ local function castSkill(fruit, skill)
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    local target = hrp.Position + hrp.CFrame.LookVector * 50
-    local dir = (target - hrp.Position).Unit * 45
+    local target = hrp.Position
+    local dir = Vector3.new(0, -1, 0) * 10
     local ray = {
         Normal = Vector3.yAxis,
         Direction = dir,
