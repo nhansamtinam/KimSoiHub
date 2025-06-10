@@ -158,7 +158,7 @@ local function fastTeleport()
     elseif placeId == 16190471004 then
         hrp.CFrame = CFrame.new(592, 2178, -1481)
     else
-        hrp.CFrame = CFrame.new(-1420, 798.93, -85)
+        hrp.CFrame = CFrame.new(-1390.10, 759.18, -185.84)
     end
 end
 
