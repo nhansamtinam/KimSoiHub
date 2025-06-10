@@ -1,4 +1,4 @@
---Auto Farm Updated !!!
+--Auto Farm
 -- 📌 Kích hoạt qua biến toàn cục từ UI chính
 shared.autoFarm = shared.autoFarm or false -- Gán mặc định nếu chưa có
 
@@ -198,8 +198,10 @@ end)
 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
     _isInGame = true
     setupCharacter(player.Character)
+    if shared.autoFarm then
+        task.delay(4, fastTeleport)
+    end
 end
-
 -- 🕹️ Không tự Play nếu tắt autoFarm
 task.spawn(function()
     while true do
