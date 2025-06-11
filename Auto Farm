@@ -1,4 +1,4 @@
---Auto Farm!!!
+--Auto Farm
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -166,7 +166,7 @@ local function startSkillLoop()
     skillLoopRunning = true
     task.spawn(function()
         while true do
-            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and isTeleported then
+            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and (isTeleported or shared.forceUnlock) then
                 for _, skill in ipairs(skills[currentFruit]) do
                     if not (shared.autoFarm and _isInGame and characterReady and isTeleported) then break end
                     if not isSkillReady(skill) then
