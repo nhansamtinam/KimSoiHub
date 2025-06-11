@@ -93,21 +93,28 @@ TextButton.MouseButton1Down:Connect(function()
 end)
 local teleportLockPriority = 0
 local autoFarmEnabled = false
---Auto Farm
-Tabs.Main:AddToggle("AutoFarmToggle", {
+local autoFarmToggleRef = nil
+local autoFarmEnabled = false
+-- Auto Farm
+local autoFarmToggleRef = nil
+local autoFarmEnabled = false
+
+autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
     Title = "Start/Stop Farm",
     Default = false,
     Callback = function(value)
         autoFarmEnabled = value
         shared.autoFarm = value
         if value then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
-        task.wait(10)
-        Options["AutoFarmToggle"]:SetValue(false)
-        print("Siuuuuu")
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
+            task.wait(10)
+            autoFarmToggleRef:SetValue(false)
+        else
+            print("Auto Farm đã tắt.")
         end
     end
 })
+
 --Auto Farm Ảo
 Tabs.Main:AddToggle("AutoFarmAoToggle", {
     Title = "Auto Farm Level",
