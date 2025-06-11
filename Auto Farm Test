@@ -1,4 +1,4 @@
---Auto Farm
+--Auto Farm !
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 
@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui")
@@ -16,6 +17,9 @@ local currentHumanoid = nil
 local characterReady = false
 local isTeleported = false
 local isAnchored = false
+
+local lockConnection = nil
+local lockedPosition = nil
 
 local skills = {
     Barrier = {"Barrier", "Bubble", "Crash", "Spikes"},
@@ -88,24 +92,6 @@ local function watchSlotChanges()
     updateCurrentFruit()
 end
 
-local function lockPosition()
-    local character = player.Character
-    if not character then return end
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    hrp.Anchored = true
-    isAnchored = true
-end
-
-local function unlockPosition()
-    local character = player.Character
-    if not character then return end
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    hrp.Anchored = false
-    isAnchored = false
-end
-
 local function fastTeleport()
     local character = player.Character or player.CharacterAdded:Wait()
     local hrp = character:WaitForChild("HumanoidRootPart", 5)
@@ -173,7 +159,6 @@ local function startSkillLoop()
                 task.wait(0.5)
             end
 
-            -- Mở khóa nếu autoFarm bị tắt hoặc force unlock
             if (not shared.autoFarm or shared.forceUnlock) and isAnchored then
                 unlockPosition()
                 isTeleported = false
