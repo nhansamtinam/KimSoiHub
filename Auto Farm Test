@@ -1,4 +1,4 @@
---Auto Farm !
+--Auto Farm !!!
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -92,7 +92,7 @@ end
 local function lockPosition()
 	if connection then connection:Disconnect() end
 
-	local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	local character = player.Character or player.CharacterAdded:Wait()
 	local root = character:WaitForChild("HumanoidRootPart")
 
 	lockedPosition = root.Position
