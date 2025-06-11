@@ -1,4 +1,4 @@
---Auto Farm 
+--Auto Farm
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -87,27 +87,34 @@ local function watchSlotChanges()
     slot:GetPropertyChangedSignal("Value"):Connect(updateCurrentFruit)
     updateCurrentFruit()
 end
+
 -- Hàm khóa vị trí nhân vật
 local function lockPosition()
-	if connection then connection:Disconnect() end
+    if connection then connection:Disconnect() end
 
-	local character = player.Character or player.CharacterAdded:Wait()
-	local root = character:WaitForChild("HumanoidRootPart")
+    local character = player.Character or player.CharacterAdded:Wait()
+    local root = character:WaitForChild("HumanoidRootPart")
 
-	lockedPosition = root.Position
+    lockedPosition = root.Position
 
-	connection = RunService.Heartbeat:Connect(function()
-		if not shared.autoFarm or shared.forceUnlock then
-			if connection then connection:Disconnect() end
-			connection = nil
-			return
-		end
+    connection = RunService.Heartbeat:Connect(function()
+        if not shared.autoFarm or shared.forceUnlock then
+            if connection then connection:Disconnect() end
+            connection = nil
+            return
+        end
 
-		-- Khóa vị trí liên tục
-		root.Velocity = Vector3.zero
-		root.AssemblyLinearVelocity = Vector3.zero
-		root.CFrame = CFrame.new(lockedPosition)
-	end)
+        root.Velocity = Vector3.zero
+        root.AssemblyLinearVelocity = Vector3.zero
+        root.CFrame = CFrame.new(lockedPosition)
+    end)
+end
+
+local function unlockPosition()
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
 end
 
 local function fastTeleport()
@@ -123,6 +130,7 @@ local function fastTeleport()
     else
         hrp.CFrame = CFrame.new(-1390.10, 759.18, -185.84)
     end
+
     isTeleported = true
 end
 
@@ -210,8 +218,10 @@ player.CharacterAdded:Connect(function(char)
     isTeleported = false
     setupCharacter(char)
     if shared.autoFarm then
-        task.delay(4, fastTeleport)
-        task.delay(1, lockPosition())
+        task.delay(4, function()
+            fastTeleport()
+            lockPosition()
+        end)
     end
 end)
 
@@ -219,8 +229,10 @@ if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
     _isInGame = true
     setupCharacter(player.Character)
     if shared.autoFarm then
-        task.delay(4, fastTeleport)
-        task.delay(1, lockPosition())
+        task.delay(4, function()
+            fastTeleport()
+            lockPosition()
+        end)
     end
 end
 
