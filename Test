@@ -1,4 +1,4 @@
---Main Updated 
+--Main Updated !!!
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 getgenv().Key = "trongkim19052009"
