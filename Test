@@ -1,4 +1,4 @@
---Main Updated !!!
+--Main Updated 
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 getgenv().Key = "trongkim19052009"
@@ -93,15 +93,19 @@ TextButton.MouseButton1Down:Connect(function()
 end)
 local teleportLockPriority = 0
 -- Auto Farm
+local autoFarmToggleRef = nil
 local autoFarmEnabled = false
-Tabs.Main:AddToggle("AutoFarmToggle", {
+
+autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
     Title = "Start/Stop Farm",
     Default = false,
     Callback = function(value)
         autoFarmEnabled = value
         shared.autoFarm = value
         if value then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
+        else
+            print("Auto Farm đã tắt.")
         end
     end
 })
