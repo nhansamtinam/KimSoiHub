@@ -2,12 +2,6 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local placeId = game.PlaceId
 
--- Hàm fastTeleport (bạn cần định nghĩa hàm này ở đâu đó trong script)
-local function fastTeleport()
-    print("[FastTeleport] Đang dịch chuyển nhanh...")
-    -- Thêm logic teleport ở đây
-end
-
 -- Hàm đi theo boss
 local function followBoss(bossModel)
     local hrp = bossModel:FindFirstChild("HumanoidRootPart")
