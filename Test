@@ -1,4 +1,4 @@
---Main Updated !!!
+--Main Updated 
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 getgenv().Key = "trongkim19052009"
@@ -92,11 +92,11 @@ TextButton.MouseButton1Down:Connect(function()
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
 end)
 local teleportLockPriority = 0
--- Auto Farm
-local autoFarmToggleRef = nil
+-- Khởi tạo toggle
 local autoFarmEnabled = false
+local autoFarmToggleRef
 
--- Tách hàm xử lý logic
+-- Hàm xử lý logic
 local function handleAutoFarmToggle(value)
     autoFarmEnabled = value
     shared.autoFarm = value
@@ -107,13 +107,19 @@ local function handleAutoFarmToggle(value)
     end
 end
 
--- Tạo toggle
-autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
-    Title = "Start/Stop Farm",
-    Default = false,
-    Callback = handleAutoFarmToggle
-})
+-- Tạo GUI sau khi Fluent khởi tạo
+task.defer(function()
+    autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
+        Title = "Start/Stop Farm",
+        Default = false,
+        Callback = handleAutoFarmToggle
+    })
 
+    -- Bật toggle sau khi khởi tạo xong
+    task.wait(1) -- đợi UI ổn định
+    autoFarmToggleRef:SetValue(true)
+    handleAutoFarmToggle(true)
+end)
 --Auto Farm Ảo
 Tabs.Main:AddToggle("AutoFarmAoToggle", {
     Title = "Auto Farm Level",
