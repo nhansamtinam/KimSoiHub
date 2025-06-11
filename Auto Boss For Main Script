@@ -30,6 +30,8 @@ task.spawn(function()
             local marco = npcsFolder:FindFirstChild("Marco")
             if marco then
                 print("[Marco] Đã xuất hiện")
+                shared.forceUnlock = true
+                task.wait(1)
                 followBoss(marco)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Marco")
             else
@@ -40,6 +42,8 @@ task.spawn(function()
             local cakeQueen = npcsFolder:FindFirstChild("Cake Queen")
             if cakeQueen then
                 print("[Cake Queen] Đã xuất hiện")
+                shared.forceUnlock = true
+                task.wait(1)
                 followBoss(cakeQueen)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Cake Queen")
             else
@@ -49,6 +53,8 @@ task.spawn(function()
             local katakuri = npcsFolder:FindFirstChild("Katakuri")
             if katakuri then
                 print("[Katakuri] Đã xuất hiện")
+                shared.forceUnlock = true
+                task.wait(1)
                 followBoss(katakuri)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Katakuri")
             else
@@ -59,6 +65,8 @@ task.spawn(function()
             local kaido = npcsFolder:FindFirstChild("Kaido")
             if kaido then
                 print("[Kaido] Đã xuất hiện")
+                shared.forceUnlock = true
+                task.wait(1)
                 followBoss(kaido)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Kaido")
             else
