@@ -1,21 +1,22 @@
---Auto Farm
+--Auto Farm !!!
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
-
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui")
-
 local _isInGame = false
 local currentFruit = nil
 local currentHumanoid = nil
 local characterReady = false
+local lockConnection = nil
+local lockedPosition = nil
 local isTeleported = false
 local isAnchored = false
+local connection = nil
 
 local skills = {
     Barrier = {"Barrier", "Bubble", "Crash", "Spikes"},
@@ -87,23 +88,27 @@ local function watchSlotChanges()
     slot:GetPropertyChangedSignal("Value"):Connect(updateCurrentFruit)
     updateCurrentFruit()
 end
-
+-- Hàm khóa vị trí nhân vật
 local function lockPosition()
-    local character = player.Character
-    if not character then return end
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    hrp.Anchored = true
-    isAnchored = true
-end
+	if connection then connection:Disconnect() end
 
-local function unlockPosition()
-    local character = player.Character
-    if not character then return end
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    hrp.Anchored = false
-    isAnchored = false
+	local character = player.Character or player.CharacterAdded:Wait()
+	local root = character:WaitForChild("HumanoidRootPart")
+
+	lockedPosition = root.Position
+
+	connection = RunService.Heartbeat:Connect(function()
+		if not shared.autoFarm or shared.forceUnlock then
+			if connection then connection:Disconnect() end
+			connection = nil
+			return
+		end
+
+		-- Khóa vị trí liên tục
+		root.Velocity = Vector3.zero
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.CFrame = CFrame.new(lockedPosition)
+	end)
 end
 
 local function fastTeleport()
@@ -123,6 +128,7 @@ local function fastTeleport()
     isTeleported = true
     task.wait(0.5)
     lockPosition()
+    isAnchored = true
 end
 
 local function castSkill(fruit, skill)
@@ -173,10 +179,9 @@ local function startSkillLoop()
                 task.wait(0.5)
             end
 
-            -- Mở khóa nếu autoFarm bị tắt hoặc force unlock
             if (not shared.autoFarm or shared.forceUnlock) and isAnchored then
                 unlockPosition()
-                isTeleported = false
+                isAnchored = false
             end
         end
     end)
