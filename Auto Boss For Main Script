@@ -2,6 +2,12 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local placeId = game.PlaceId
 
+-- Hàm fastTeleport (bạn cần định nghĩa hàm này ở đâu đó trong script)
+local function fastTeleport()
+    print("[FastTeleport] Đang dịch chuyển nhanh...")
+    -- Thêm logic teleport ở đây
+end
+
 -- Hàm đi theo boss
 local function followBoss(bossModel)
     local hrp = bossModel:FindFirstChild("HumanoidRootPart")
@@ -14,6 +20,12 @@ local function followBoss(bossModel)
             character.HumanoidRootPart.CFrame = hrp.CFrame + Vector3.new(0, 5, 0)
         end
         task.wait(0.1)
+    end
+
+    -- Khi boss đã chết
+    print("[Boss] Đã bị tiêu diệt")
+    if shared.autoFarm then
+        fastTeleport()
     end
 end
 
