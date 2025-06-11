@@ -1,4 +1,4 @@
---Auto Farm
+--Auto Farm!!!
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -201,7 +201,6 @@ local function setupCharacter(character)
     if not hrp or not currentHumanoid then return end
 
     isTeleported = false
-    isAnchored = false
 
     task.spawn(function()
         local maxWait = 5
@@ -222,7 +221,6 @@ player.CharacterAdded:Connect(function(char)
     _isInGame = true
     characterReady = false
     isTeleported = false
-    isAnchored = false
     setupCharacter(char)
     if shared.autoFarm then
         task.delay(4, fastTeleport)
