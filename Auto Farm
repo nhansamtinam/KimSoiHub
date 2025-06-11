@@ -1,4 +1,4 @@
---Auto Farm!!!
+--Auto Farm
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -161,25 +161,31 @@ local function castSkill(fruit, skill)
 end
 
 local skillLoopRunning = false
+
 local function startSkillLoop()
     if skillLoopRunning then return end
     skillLoopRunning = true
+
     task.spawn(function()
         while true do
-            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and (isTeleported or shared.forceUnlock) then
+            local canCast = shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit]
+            local bypassLock = isTeleported or shared.forceUnlock
+
+            if canCast and bypassLock then
                 for _, skill in ipairs(skills[currentFruit]) do
-                    if not (shared.autoFarm and _isInGame and characterReady and (isTeleported or shared.forceUnlock)) then break end
+                    -- Kiểm tra lại shared.autoFarm và điều kiện characterReady, nhưng KHÔNG kiểm tra lock ở đây nữa
+                    if not (shared.autoFarm and _isInGame and characterReady and currentFruit) then break end
+
                     if not isSkillReady(skill) then
-                        -- Nếu không thể kiểm tra cooldown kỹ năng, autoFarm bị tắt
                         warn("[AutoFarm] Skill cooldown không xác định hoặc lỗi:", skill)
                         shared.autoFarm = false
                         break
                     end
+
                     castSkill(currentFruit, skill)
                     task.wait(0.15)
                 end
             else
-                -- Nếu fruit không hợp lệ hoặc không có skill, tắt autoFarm
                 if shared.autoFarm and (not currentFruit or not skills[currentFruit]) then
                     warn("[AutoFarm] Không có trái cây hợp lệ hoặc danh sách kỹ năng rỗng. Tự động tắt autoFarm.")
                     shared.autoFarm = false
@@ -187,7 +193,8 @@ local function startSkillLoop()
                 task.wait(0.5)
             end
 
-            if (not shared.autoFarm or shared.forceUnlock) then
+            -- Nếu tắt autoFarm hoặc đang forceUnlock thì unlock vị trí
+            if not shared.autoFarm or shared.forceUnlock then
                 unlockPosition()
             end
         end
