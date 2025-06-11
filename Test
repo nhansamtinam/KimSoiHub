@@ -106,9 +106,7 @@ autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
         autoFarmEnabled = value
         shared.autoFarm = value
         if value then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
-            task.wait(10)
-            autoFarmToggleRef:SetValue(false)
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm")
         else
             print("Auto Farm đã tắt.")
         end
