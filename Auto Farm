@@ -1,4 +1,4 @@
---Auto Farm !!!
+--Auto Farm
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -226,7 +226,7 @@ if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
     _isInGame = true
     setupCharacter(player.Character)
     if shared.autoFarm then
-        task.delay(4, fastTeleport)
+        task.delay(2, fastTeleport) --Chỉnh Lên 3 Nếu Lỗi Không Tele
     end
 end
 
@@ -239,7 +239,7 @@ task.spawn(function()
                     local playButton = guiObj:FindFirstChild("Play", true)
                     if playButton and playButton:IsA("GuiButton") then
                         GuiService.SelectedObject = playButton
-                        task.wait(5)
+                        task.wait(4)
                         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                         task.wait(0.05)
                         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
