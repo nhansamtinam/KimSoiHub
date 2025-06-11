@@ -26,6 +26,7 @@ local function followBoss(bossModel)
     print("[Boss] Đã bị tiêu diệt")
     if shared.autoFarm then
     shared.forceUnlock = false
+    task.wait(1)
     fastTeleport()
 else
     print("Không Gọi Hàm Teleport")
