@@ -101,7 +101,7 @@ Tabs.Main:AddToggle("AutoFarmToggle", {
         autoFarmEnabled = value
         shared.autoFarm = value
         if value then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm%20Test"))()
         end
     end
 })
