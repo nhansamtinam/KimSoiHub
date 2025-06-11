@@ -93,18 +93,41 @@ TextButton.MouseButton1Down:Connect(function()
 end)
 local teleportLockPriority = 0
 -- Auto Farm
+local autoFarmToggleRef = nil
 local autoFarmEnabled = false
-Tabs.Main:AddToggle("AutoFarmToggle", {
+
+-- Hàm xử lý khi bật/tắt farm
+local function handleAutoFarmToggle(value)
+    print("[AutoFarm] Callback chạy với:", value)
+    autoFarmEnabled = value
+    shared.autoFarm = value
+
+    if value then
+        -- Bắt đầu Auto Farm
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
+    else
+        -- Khi tắt: bạn có thể thêm logic để dừng script nếu cần
+        print("[AutoFarm] Đã tắt Auto Farm.")
+    end
+end
+
+-- Tạo toggle và lưu tham chiếu lại
+autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
     Title = "Start/Stop Farm",
     Default = false,
-    Callback = function(value)
-        autoFarmEnabled = value
-        shared.autoFarm = value
-        if value then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
-        end
-    end
+    Callback = handleAutoFarmToggle
 })
+
+-- Lưu toggle vào Options để dùng từ nơi khác
+Options["AutoFarmToggle"] = autoFarmToggleRef
+
+-- Hàm đảm bảo toggle hoạt động đúng (kể cả khi UI không gọi callback)
+function shared.ForceToggleAutoFarm(state)
+    if Options["AutoFarmToggle"] then
+        Options["AutoFarmToggle"]:SetValue(state)
+        handleAutoFarmToggle(state) -- Gọi callback thủ công để đảm bảo
+    end
+end
 --Auto Farm Ảo
 Tabs.Main:AddToggle("AutoFarmAoToggle", {
     Title = "Auto Farm Level",
