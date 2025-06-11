@@ -102,6 +102,9 @@ Tabs.Main:AddToggle("AutoFarmToggle", {
         shared.autoFarm = value
         if value then
         loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
+        task.wait(10)
+        Options["AutoFarmToggle"]:SetValue(false)
+        print("Siuuuuu")
         end
     end
 })
