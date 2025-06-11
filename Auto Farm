@@ -15,7 +15,6 @@ local characterReady = false
 local lockConnection = nil
 local lockedPosition = nil
 local isTeleported = false
-local isAnchored = false
 local connection = nil
 
 local skills = {
@@ -124,11 +123,9 @@ local function fastTeleport()
     else
         hrp.CFrame = CFrame.new(-1390.10, 759.18, -185.84)
     end
-
-    isTeleported = true
     task.wait(0.5)
     lockPosition()
-    isAnchored = true
+    isTeleported = true
 end
 
 local function castSkill(fruit, skill)
@@ -169,9 +166,9 @@ local function startSkillLoop()
     skillLoopRunning = true
     task.spawn(function()
         while true do
-            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and isTeleported and isAnchored then
+            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and isTeleported then
                 for _, skill in ipairs(skills[currentFruit]) do
-                    if not (shared.autoFarm and _isInGame and characterReady and isTeleported and isAnchored) then break end
+                    if not (shared.autoFarm and _isInGame and characterReady and isTeleported) then break end
                     if not isSkillReady(skill) then
                         -- Nếu không thể kiểm tra cooldown kỹ năng, autoFarm bị tắt
                         warn("[AutoFarm] Skill cooldown không xác định hoặc lỗi:", skill)
@@ -190,9 +187,8 @@ local function startSkillLoop()
                 task.wait(0.5)
             end
 
-            if (not shared.autoFarm or shared.forceUnlock) and isAnchored then
+            if (not shared.autoFarm or shared.forceUnlock) then
                 unlockPosition()
-                isAnchored = false
             end
         end
     end)
