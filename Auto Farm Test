@@ -1,10 +1,11 @@
+--Auto Farm
 shared.autoFarm = shared.autoFarm or false
-shared.forceUnlock = shared.forceUnlock or false
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GuiService = game:GetService("GuiService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+
 local player = Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui")
 
@@ -12,72 +13,7 @@ local _isInGame = false
 local currentFruit = nil
 local currentHumanoid = nil
 local characterReady = false
-local teleportLocked = false
-local lastLockedPosition = nil
 
-local function lockTeleportPosition()
-    local char = player.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    teleportLocked = true
-    lastLockedPosition = hrp.Position
-
-    task.spawn(function()
-        while teleportLocked and shared.autoFarm and not shared.forceUnlock do
-            if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then break end
-            hrp = player.Character.HumanoidRootPart
-            hrp.Velocity = Vector3.zero
-            hrp.RotVelocity = Vector3.zero
-            hrp.CFrame = CFrame.new(lastLockedPosition)
-            task.wait(0.1)
-        end
-        teleportLocked = false
-    end)
-end
-
-local function fastTeleportAndLock()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local hrp = character:WaitForChild("HumanoidRootPart", 5)
-    if not hrp then return end
-
-    local pos = Vector3.new()
-    if game.PlaceId == 12413901502 then
-        pos = Vector3.new(-2229, 534, 1384)
-    elseif game.PlaceId == 16190471004 then
-        pos = Vector3.new(592, 2178, -1481)
-    else
-        pos = Vector3.new(-1390.10, 759.18, -185.84)
-    end
-    hrp.CFrame = CFrame.new(pos)
-    task.wait(0.5)
-    lockTeleportPosition()
-end
-
-local function waitAndClickPlay()
-    local clicked = false
-    for i = 1, 30 do
-        if player.Character then break end
-        for _, guiObj in ipairs(gui:GetChildren()) do
-            if guiObj:IsA("ScreenGui") then
-                local playButton = guiObj:FindFirstChild("Play", true)
-                if playButton and playButton:IsA("GuiButton") then
-                    GuiService.SelectedObject = playButton
-                    task.wait(0.2)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-                    task.wait(0.05)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-                    clicked = true
-                    break
-                end
-            end
-        end
-        if clicked then break end
-        task.wait(1)
-    end
-end
-
--- 💥 Danh sách kỹ năng theo trái ác quỷ
 local skills = {
     Barrier = {"Barrier", "Bubble", "Crash", "Spikes"},
     Chop = {"Cannon", "Grab", "Car", "Festival"},
@@ -120,7 +56,7 @@ local skills = {
     DarkXQuake = {"AntiQuake", "BlackHolePath", "BlackTurret", "NeoKurouzuCombo", "AntiBody", "QuadraSeaQuake"},
     Okuchi = {"PrimalRage", "ArcticBreath", "DevastatingDrop", "HallowedCuts", "GlacialCoat", "DivineSerpent", "Transform"},
 }
--- ✅ Kiểm tra cooldown
+
 local function isSkillReady(skillName)
     local cdFolder = player:FindFirstChild("Cooldowns")
     if not cdFolder then return true end
@@ -131,7 +67,6 @@ local function isSkillReady(skillName)
     return skillCD.Value <= 0
 end
 
--- 🧬 Cập nhật trái hiện tại
 local function updateCurrentFruit()
     local mainData = player:FindFirstChild("MAIN_DATA")
     if not mainData then warn("Không tìm thấy MAIN_DATA") return end
@@ -141,7 +76,6 @@ local function updateCurrentFruit()
     currentFruit = slotValue and slotValue.Value or nil
 end
 
--- 👀 Theo dõi thay đổi slot trái
 local function watchSlotChanges()
     local mainData = player:WaitForChild("MAIN_DATA", 10)
     if not mainData then return end
@@ -150,12 +84,16 @@ local function watchSlotChanges()
     slot:GetPropertyChangedSignal("Value"):Connect(updateCurrentFruit)
     updateCurrentFruit()
 end
+
 local function castSkill(fruit, skill)
     if not fruit or not skill then return end
     if not isSkillReady(skill) then return end
-    local char = player.Character or player.CharacterAdded:Wait()
+
+    local char = player.Character
+    if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
+
     local target = hrp.Position
     local dir = Vector3.new(0, -1, 0) * 10
     local ray = {
@@ -163,12 +101,16 @@ local function castSkill(fruit, skill)
         Direction = dir,
         Origin = hrp.Position,
         Instance = workspace.Map:FindFirstChildWhichIsA("BasePart") or workspace.Terrain,
-        Distance = 10,
+        Distance = (target - hrp.Position).Magnitude,
         Material = Enum.Material.Grass,
         Position = target
     }
+
     local success, err = pcall(function()
-        ReplicatedStorage.Replicator:InvokeServer(fruit, skill, {Ground = {Position = target}, MouseRay = ray})
+        ReplicatedStorage.Replicator:InvokeServer(fruit, skill, {
+            Ground = {Position = target},
+            MouseRay = ray
+        })
         ReplicatedStorage.ReplicatorNoYield:FireServer("ClientData", "UpdateData", {
             RootCF = hrp.CFrame,
             MouseRay = ray
@@ -177,16 +119,15 @@ local function castSkill(fruit, skill)
     if not success then warn("[castSkill] Lỗi:", err) end
 end
 
--- 🔁 Spam chiêu khi đã khóa vị trí
 local skillLoopRunning = false
 local function startSkillLoop()
     if skillLoopRunning then return end
     skillLoopRunning = true
     task.spawn(function()
         while true do
-            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and teleportLocked then
+            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] then
                 for _, skill in ipairs(skills[currentFruit]) do
-                    if not (shared.autoFarm and _isInGame and characterReady and teleportLocked) then break end
+                    if not (shared.autoFarm and _isInGame and characterReady) then break end
                     castSkill(currentFruit, skill)
                     task.wait(0.15)
                 end
@@ -197,17 +138,33 @@ local function startSkillLoop()
     end)
 end
 
--- 🧠 Gán nhân vật
+local function fastTeleport()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart", 5)
+    if not hrp then return end
+
+    local placeId = game.PlaceId
+    if placeId == 12413901502 then
+        hrp.CFrame = CFrame.new(-2229, 534, 1384)
+    elseif placeId == 16190471004 then
+        hrp.CFrame = CFrame.new(592, 2178, -1481)
+    else
+        hrp.CFrame = CFrame.new(-1390.10, 759.18, -185.84)
+    end
+end
+
 local function setupCharacter(character)
     characterReady = false
     currentHumanoid = character:WaitForChild("Humanoid", 5)
     local hrp = character:WaitForChild("HumanoidRootPart", 5)
     if not hrp or not currentHumanoid then return end
+
     task.spawn(function()
+        local maxWait = 5
         local elapsed = 0
-        while elapsed < 5 do
+        while elapsed < maxWait do
             updateCurrentFruit()
-            if currentFruit and hrp:IsDescendantOf(game) then
+            if currentFruit and character:FindFirstChild("HumanoidRootPart") and currentHumanoid.Health > 0 then
                 characterReady = true
                 break
             end
@@ -217,30 +174,12 @@ local function setupCharacter(character)
     end)
 end
 
--- 👂 Gán lại khi chết
 player.CharacterAdded:Connect(function(char)
     _isInGame = true
     characterReady = false
-    teleportLocked = false
     setupCharacter(char)
     if shared.autoFarm then
-        task.delay(4, function()
-            fastTeleportAndLock()
-        end)
-    end
-end)
-
--- 🚀 Bắt đầu khi bật script
-task.spawn(function()
-    while true do
-        if shared.autoFarm then
-            if not player.Character then
-                waitAndClickPlay()
-            elseif not teleportLocked then
-                fastTeleportAndLock()
-            end
-        end
-        task.wait(3)
+        task.delay(4, fastTeleport)
     end
 end)
 
@@ -248,15 +187,14 @@ if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
     _isInGame = true
     setupCharacter(player.Character)
     if shared.autoFarm then
-        task.delay(4, fastTeleportAndLock)
+        task.delay(4, fastTeleport)
     end
 end
--- 🕹️ Không tự Play nếu tắt autoFarm
+
 task.spawn(function()
     while true do
         if shared.autoFarm and not player.Character then
-            local guiList = gui:GetChildren()
-            for _, guiObj in ipairs(guiList) do
+            for _, guiObj in ipairs(gui:GetChildren()) do
                 if guiObj:IsA("ScreenGui") then
                     local playButton = guiObj:FindFirstChild("Play", true)
                     if playButton and playButton:IsA("GuiButton") then
@@ -271,6 +209,7 @@ task.spawn(function()
         end
         task.wait(5)
     end
-end
+end)
+
 watchSlotChanges()
 startSkillLoop()
