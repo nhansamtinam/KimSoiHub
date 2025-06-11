@@ -1,4 +1,4 @@
---Auto Farm
+--Auto Farm !!!
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -15,6 +15,7 @@ local characterReady = false
 local lockConnection = nil
 local lockedPosition = nil
 local isTeleported = false
+local isAnchored = false
 local connection = nil
 
 local skills = {
@@ -123,9 +124,11 @@ local function fastTeleport()
     else
         hrp.CFrame = CFrame.new(-1390.10, 759.18, -185.84)
     end
+
+    isTeleported = true
     task.wait(0.5)
     lockPosition()
-    isTeleported = true
+    isAnchored = true
 end
 
 local function castSkill(fruit, skill)
@@ -161,41 +164,24 @@ local function castSkill(fruit, skill)
 end
 
 local skillLoopRunning = false
-
 local function startSkillLoop()
     if skillLoopRunning then return end
     skillLoopRunning = true
-
     task.spawn(function()
         while true do
-            local canCast = shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit]
-            local bypassLock = isTeleported or shared.forceUnlock
-
-            if canCast and bypassLock then
+            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and isTeleported and isAnchored then
                 for _, skill in ipairs(skills[currentFruit]) do
-                    -- Kiểm tra lại shared.autoFarm và điều kiện characterReady, nhưng KHÔNG kiểm tra lock ở đây nữa
-                    if not (shared.autoFarm and _isInGame and characterReady and currentFruit) then break end
-
-                    if not isSkillReady(skill) then
-                        warn("[AutoFarm] Skill cooldown không xác định hoặc lỗi:", skill)
-                        shared.autoFarm = false
-                        break
-                    end
-
+                    if not (shared.autoFarm and _isInGame and characterReady and isTeleported and isAnchored) then break end
                     castSkill(currentFruit, skill)
                     task.wait(0.15)
                 end
             else
-                if shared.autoFarm and (not currentFruit or not skills[currentFruit]) then
-                    warn("[AutoFarm] Không có trái cây hợp lệ hoặc danh sách kỹ năng rỗng. Tự động tắt autoFarm.")
-                    shared.autoFarm = false
-                end
                 task.wait(0.5)
             end
 
-            -- Nếu tắt autoFarm hoặc đang forceUnlock thì unlock vị trí
-            if not shared.autoFarm or shared.forceUnlock then
+            if (not shared.autoFarm or shared.forceUnlock) and isAnchored then
                 unlockPosition()
+                isAnchored = false
             end
         end
     end)
@@ -208,6 +194,7 @@ local function setupCharacter(character)
     if not hrp or not currentHumanoid then return end
 
     isTeleported = false
+    isAnchored = false
 
     task.spawn(function()
         local maxWait = 5
@@ -228,6 +215,7 @@ player.CharacterAdded:Connect(function(char)
     _isInGame = true
     characterReady = false
     isTeleported = false
+    isAnchored = false
     setupCharacter(char)
     if shared.autoFarm then
         task.delay(4, fastTeleport)
@@ -238,7 +226,7 @@ if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
     _isInGame = true
     setupCharacter(player.Character)
     if shared.autoFarm then
-        task.delay(2, fastTeleport) --Chỉnh Lên 3 Nếu Lỗi Không Tele
+        task.delay(4, fastTeleport)
     end
 end
 
@@ -251,7 +239,7 @@ task.spawn(function()
                     local playButton = guiObj:FindFirstChild("Play", true)
                     if playButton and playButton:IsA("GuiButton") then
                         GuiService.SelectedObject = playButton
-                        task.wait(4)
+                        task.wait(5)
                         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                         task.wait(0.05)
                         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
