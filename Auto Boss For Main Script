@@ -21,6 +21,7 @@ local function followBoss(bossModel)
     if shared.autoFarm then
     shared.forceUnlock = false
     isAnchored = false
+    isTeleported = false
     task.wait(1)
     autoFarmToggleRef:SetValue(false)
     task.wait(1)
