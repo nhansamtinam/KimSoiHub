@@ -25,8 +25,10 @@ local function followBoss(bossModel)
     -- Khi boss đã chết
     print("[Boss] Đã bị tiêu diệt")
     if shared.autoFarm then
-        fastTeleport()
-    end
+    fastTeleport()
+else
+    print("Không Gọi Hàm Teleport")
+end
 end
 
 -- Hàm kiểm tra boss theo PlaceId
