@@ -182,8 +182,12 @@ local function startSkillLoop()
                 task.wait(0.5)
             end
 
-            if (not shared.autoFarm or shared.forceUnlock) then
+            -- Xử lý unlock vị trí
+            if shared.autoFarm and shared.forceUnlock then
                 unlockPosition()
+            elseif not shared.autoFarm then
+                unlockPosition()
+                isTeleported = false
             end
         end
     end)
