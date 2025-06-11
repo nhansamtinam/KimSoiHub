@@ -1,4 +1,4 @@
---Main
+--Main Updated !!!
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
 
 getgenv().Key = "trongkim19052009"
@@ -91,6 +91,7 @@ TextButton.MouseButton1Down:Connect(function()
     task.wait(0.05)
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
 end)
+local teleportLockPriority = 0
 -- Auto Farm
 local autoFarmEnabled = false
 Tabs.Main:AddToggle("AutoFarmToggle", {
@@ -100,7 +101,7 @@ Tabs.Main:AddToggle("AutoFarmToggle", {
         autoFarmEnabled = value
         shared.autoFarm = value
         if value then
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
         end
     end
 })
@@ -427,7 +428,7 @@ Tabs.Main:AddToggle("Auto Find Boss", {
     end
 })
 --Auto Find Katakuri
-Tabs.Main:AddToggle("Auto Find Boss", {
+Tabs.Main:AddToggle("Auto Find Boss Katakuri", {
     Title = "Auto Find Boss(Katakuri)",
     Default = false,
     Callback = function(value)
@@ -603,13 +604,24 @@ Tabs.Player:AddToggle("FollowLowestHP", {
         end
     end
 })
-
 --Kích Hoạt Kaitun Auto Spin
-Tabs.Fruit:AddButton({
-    Title = "Kaitun Auto Spin Fruit",
-    Description = "Kích Hoạt Kaitun Auto Spin",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Kaitun"))()
+Tabs.Fruit:AddToggle("Kaitun Mythical", {
+    Title = "Kaitun Auto Find Fruit Mythical",
+    Default = false,
+    Callback = function(value)
+        if value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Kaitun"))()
+        end
+    end
+})
+--Kích Hoạt Kaitun Auto Spin Legend
+Tabs.Fruit:AddToggle("Kaitun Legend", {
+    Title = "Kaitun Auto Find Fruit Mythical - Legend",
+    Default = false,
+    Callback = function(value)
+        if value then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Kaitun%20Legend"))()
+        end
     end
 })
 SaveManager:LoadAutoloadConfig()
