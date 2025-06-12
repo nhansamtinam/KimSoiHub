@@ -264,44 +264,59 @@ task.spawn(function()
         end
 
         if shared.autoFarm and not player.Character then
-            local playerGui = player:FindFirstChild("PlayerGui")
-            if not playerGui then
-                task.wait(1)
-                continue
-            end
+            local guiList = gui:GetChildren()
+            for _, guiObj in ipairs(guiList) do
+                if guiObj:IsA("ScreenGui") then
+                    local playButton = guiObj:FindFirstChild("Play", true)
+                    local spinButton = guiObj:FindFirstChild("Spin Fruit", true)
+                    local joinButton = guiObj:FindFirstChild("Join Friend", true)
+                    local afkButton = guiObj:FindFirstChild("AFK World", true)
+                    local rankedButton = guiObj:FindFirstChild("Ranked Matches", true)
 
-            local rootGui = playerGui:FindFirstChildOfClass("ScreenGui")
-            if rootGui then
-                local buttons = {
-                    rootGui:FindFirstChild("Play", true),
-                    rootGui:FindFirstChild("Spin Fruit", true),
-                    rootGui:FindFirstChild("Join Friend", true),
-                    rootGui:FindFirstChild("AFK World", true),
-                    rootGui:FindFirstChild("Ranked Matches", true)
-                }
+                    if playButton and spinButton and joinButton and afkButton and rankedButton then
+                        print(">> Tìm thấy tất cả các nút.")
 
-                local allVisible = true
-                local xPos = nil
-                for _, btn in ipairs(buttons) do
-                    if not (btn and btn:IsA("GuiButton") and btn.Visible) then
-                        allVisible = false
-                        break
+                        local allVisible = (
+                            playButton.Visible and spinButton.Visible and joinButton.Visible and
+                            afkButton.Visible and rankedButton.Visible
+                        )
+
+                        print("Play.Visible =", playButton.Visible)
+                        print("Spin.Visible =", spinButton.Visible)
+                        print("Join.Visible =", joinButton.Visible)
+                        print("AFK.Visible =", afkButton.Visible)
+                        print("Ranked.Visible =", rankedButton.Visible)
+
+                        local x = playButton.AbsolutePosition.X
+                        print("Play X =", x)
+                        print("Spin X =", spinButton.AbsolutePosition.X)
+                        print("Join X =", joinButton.AbsolutePosition.X)
+                        print("AFK X  =", afkButton.AbsolutePosition.X)
+                        print("Rank X =", rankedButton.AbsolutePosition.X)
+
+                        local xAligned = (
+                            math.abs(spinButton.AbsolutePosition.X - x) < 5 and
+                            math.abs(joinButton.AbsolutePosition.X - x) < 5 and
+                            math.abs(afkButton.AbsolutePosition.X - x) < 5 and
+                            math.abs(rankedButton.AbsolutePosition.X - x) < 5
+                        )
+
+                        print(">> allVisible =", allVisible)
+                        print(">> xAligned =", xAligned)
+
+                        if allVisible and xAligned then
+                            print(">> Điều kiện đầy đủ – đang nhấn nút Play...")
+                            GuiService.SelectedObject = playButton
+                            task.wait(0.5)
+                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                            task.wait(0.05)
+                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                        else
+                            print(">> Điều kiện chưa đủ – không nhấn.")
+                        end
+                    else
+                        print(">> Không tìm thấy đủ 5 nút.")
                     end
-                    if not xPos then
-                        xPos = btn.AbsolutePosition.X
-                    elseif math.abs(btn.AbsolutePosition.X - xPos) > 5 then
-                        -- Không cùng hàng theo trục X
-                        allVisible = false
-                        break
-                    end
-                end
-
-                if allVisible and buttons[1] then
-                    GuiService.SelectedObject = buttons[1]
-                    task.wait(0.2)
-                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-                    task.wait(0.05)
-                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
                 end
             end
         end
