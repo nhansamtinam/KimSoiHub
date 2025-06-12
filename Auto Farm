@@ -251,6 +251,31 @@ if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 end
 
 task.spawn(function()
+    -- Hàm kiểm tra xem các nút đã sẵn sàng (thẳng hàng và hiện đủ chưa)
+    local function isPlayButtonReady(gui)
+        local buttonNames = {"Play", "Spin Fruit", "Join Friend", "AFK World", "Ranked Matches"}
+        local positions = {}
+
+        for _, name in ipairs(buttonNames) do
+            local btn = gui:FindFirstChild(name, true)
+            if not btn or not btn:IsA("GuiButton") then
+                return false -- Nếu thiếu nút hoặc không phải GuiButton thì chưa sẵn sàng
+            end
+            table.insert(positions, btn.AbsolutePosition.Y)
+        end
+
+        -- Kiểm tra khoảng cách giữa các nút có đều nhau không
+        local expectedGap = positions[2] - positions[1]
+        for i = 2, #positions - 1 do
+            local gap = positions[i + 1] - positions[i]
+            if math.abs(gap - expectedGap) > 2 then
+                return false -- Nếu khoảng cách lệch nhau quá 2 pixel thì chưa sẵn sàng
+            end
+        end
+
+        return true
+    end
+
     while true do
         -- Nếu autoFarm tắt, dừng hẳn hoạt động
         if not shared.autoFarm then
@@ -265,8 +290,14 @@ task.spawn(function()
                 if guiObj:IsA("ScreenGui") then
                     local playButton = guiObj:FindFirstChild("Play", true)
                     if playButton and playButton:IsA("GuiButton") then
+                        -- Chờ đến khi UI sẵn sàng
+                        repeat
+                            task.wait(0.1)
+                        until isPlayButtonReady(guiObj)
+
+                        -- Chọn nút PLAY và nhấn Enter
                         GuiService.SelectedObject = playButton
-                        task.wait(5)
+                        task.wait(0.1)
                         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                         task.wait(0.05)
                         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
