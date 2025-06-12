@@ -1,4 +1,4 @@
---Auto Farm !!!
+--Auto Farm !
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -14,8 +14,7 @@ local currentHumanoid = nil
 local characterReady = false
 local lockConnection = nil
 local lockedPosition = nil
-local isTeleported = false
-local isAnchored = false
+isTeleported = false
 local connection = nil
 
 local skills = {
@@ -88,27 +87,34 @@ local function watchSlotChanges()
     slot:GetPropertyChangedSignal("Value"):Connect(updateCurrentFruit)
     updateCurrentFruit()
 end
+
 -- Hàm khóa vị trí nhân vật
 local function lockPosition()
-	if connection then connection:Disconnect() end
+    if connection then connection:Disconnect() end
 
-	local character = player.Character or player.CharacterAdded:Wait()
-	local root = character:WaitForChild("HumanoidRootPart")
+    local character = player.Character or player.CharacterAdded:Wait()
+    local root = character:WaitForChild("HumanoidRootPart")
 
-	lockedPosition = root.Position
+    lockedPosition = root.Position
 
-	connection = RunService.Heartbeat:Connect(function()
-		if not shared.autoFarm or shared.forceUnlock then
-			if connection then connection:Disconnect() end
-			connection = nil
-			return
-		end
+    connection = RunService.Heartbeat:Connect(function()
+        if not shared.autoFarm or shared.forceUnlock then
+            if connection then connection:Disconnect() end
+            connection = nil
+            return
+        end
 
-		-- Khóa vị trí liên tục
-		root.Velocity = Vector3.zero
-		root.AssemblyLinearVelocity = Vector3.zero
-		root.CFrame = CFrame.new(lockedPosition)
-	end)
+        root.Velocity = Vector3.zero
+        root.AssemblyLinearVelocity = Vector3.zero
+        root.CFrame = CFrame.new(lockedPosition)
+    end)
+end
+
+local function unlockPosition()
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
 end
 
 local function fastTeleport()
@@ -126,9 +132,6 @@ local function fastTeleport()
     end
 
     isTeleported = true
-    task.wait(0.5)
-    lockPosition()
-    isAnchored = true
 end
 
 local function castSkill(fruit, skill)
@@ -169,19 +172,26 @@ local function startSkillLoop()
     skillLoopRunning = true
     task.spawn(function()
         while true do
-            if shared.autoFarm and _isInGame and characterReady and currentFruit and skills[currentFruit] and isTeleported and isAnchored then
+            if not shared.autoFarm then
+                unlockPosition()
+                isTeleported = false
+                task.wait(0.5)
+                continue
+            end
+
+            -- Nếu autoFarm bật và forceUnlock thì chỉ unlock vị trí (vẫn spam skill nếu đủ điều kiện)
+            if shared.forceUnlock then
+                unlockPosition()
+            end
+
+            if _isInGame and characterReady and currentFruit and skills[currentFruit] and isTeleported then
                 for _, skill in ipairs(skills[currentFruit]) do
-                    if not (shared.autoFarm and _isInGame and characterReady and isTeleported and isAnchored) then break end
+                    if not (shared.autoFarm and _isInGame and characterReady and isTeleported) then break end
                     castSkill(currentFruit, skill)
                     task.wait(0.15)
                 end
             else
                 task.wait(0.5)
-            end
-
-            if (not shared.autoFarm or shared.forceUnlock) and isAnchored then
-                unlockPosition()
-                isAnchored = false
             end
         end
     end)
@@ -194,7 +204,6 @@ local function setupCharacter(character)
     if not hrp or not currentHumanoid then return end
 
     isTeleported = false
-    isAnchored = false
 
     task.spawn(function()
         local maxWait = 5
@@ -212,26 +221,42 @@ local function setupCharacter(character)
 end
 
 player.CharacterAdded:Connect(function(char)
+    if not shared.autoFarm then return end
+
     _isInGame = true
     characterReady = false
     isTeleported = false
-    isAnchored = false
     setupCharacter(char)
-    if shared.autoFarm then
-        task.delay(4, fastTeleport)
-    end
-end)
 
+    task.delay(4, function()
+        if shared.autoFarm then
+            fastTeleport()
+            lockPosition()
+        end
+    end)
+end)
 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-    _isInGame = true
-    setupCharacter(player.Character)
     if shared.autoFarm then
-        task.delay(4, fastTeleport)
+        _isInGame = true
+        setupCharacter(player.Character)
+        task.delay(4, function()
+            if shared.autoFarm then
+                fastTeleport()
+                lockPosition()
+            end
+        end)
     end
 end
 
 task.spawn(function()
     while true do
+        -- Nếu autoFarm tắt, dừng hẳn hoạt động
+        if not shared.autoFarm then
+            task.wait(2)
+            continue
+        end
+
+        -- Nếu autoFarm bật và chưa có nhân vật, thử auto-play
         if shared.autoFarm and not player.Character then
             local guiList = gui:GetChildren()
             for _, guiObj in ipairs(guiList) do
@@ -247,6 +272,7 @@ task.spawn(function()
                 end
             end
         end
+
         task.wait(5)
     end
 end)
