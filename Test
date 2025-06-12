@@ -99,6 +99,7 @@ local autoFarmEnabled = false
 local autoFarmToggleRef = nil
 local autoFarmEnabled = false
 local isTeleported = false
+local bienCaoCap = false
 autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
     Title = "Start/Stop Farm",
     Default = false,
