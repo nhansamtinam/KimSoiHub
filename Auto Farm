@@ -1,4 +1,4 @@
---Auto Farm !
+--Auto Farm !!!
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -263,25 +263,20 @@ task.spawn(function()
             continue
         end
 
+        local player = game:GetService("Players").LocalPlayer
         if shared.autoFarm and not player.Character then
-            for _, guiObj in ipairs(gui:GetChildren()) do
-                if guiObj:IsA("ScreenGui") then
-                    -- Tìm tất cả các nút cần thiết dựa vào Text
-                    local playButton, spinButton, joinButton, afkButton, rankedButton
-
-                    for _, btn in ipairs(guiObj:GetDescendants()) do
-                        if btn:IsA("TextButton") then
-                            local text = btn.Text:lower()
-                            if text:find("play") then playButton = btn end
-                            if text:find("spin") then spinButton = btn end
-                            if text:find("join") then joinButton = btn end
-                            if text:find("afk") then afkButton = btn end
-                            if text:find("rank") then rankedButton = btn end
-                        end
-                    end
+            local mainMenu = player:FindFirstChild("PlayerGui"):FindFirstChild("MainMenu")
+            if mainMenu then
+                local buttonsFolder = mainMenu:FindFirstChild("Buttons")
+                if buttonsFolder then
+                    local playButton = buttonsFolder:FindFirstChild("Play")
+                    local spinButton = buttonsFolder:FindFirstChild("Spin")
+                    local joinButton = buttonsFolder:FindFirstChild("JoinFriend")
+                    local afkButton = buttonsFolder:FindFirstChild("AFKWorld")
+                    local rankedButton = buttonsFolder:FindFirstChild("Ranked")
 
                     if playButton and spinButton and joinButton and afkButton and rankedButton then
-                        print(">> Tìm thấy tất cả các nút qua Text.")
+                        print(">> Tìm thấy đủ các nút.")
 
                         local allVisible = (
                             playButton.Visible and spinButton.Visible and joinButton.Visible and
@@ -301,18 +296,22 @@ task.spawn(function()
 
                         if allVisible and xAligned then
                             print(">> Điều kiện đủ – nhấn nút Play.")
-                            GuiService.SelectedObject = playButton
+                            game:GetService("GuiService").SelectedObject = playButton
                             task.wait(0.5)
-                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                             task.wait(0.05)
-                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Return, false, game)
                         else
                             print(">> Các nút chưa sẵn sàng để nhấn.")
                         end
                     else
-                        print(">> Không tìm thấy đủ các nút bằng Text.")
+                        print(">> Không tìm thấy đủ các nút trong Buttons.")
                     end
+                else
+                    print(">> Không tìm thấy Folder Buttons trong MainMenu.")
                 end
+            else
+                print(">> Không tìm thấy MainMenu trong PlayerGui.")
             end
         end
 
