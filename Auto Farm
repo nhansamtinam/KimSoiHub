@@ -1,4 +1,4 @@
---Auto Farm !!!
+--Auto Farm !
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -264,36 +264,31 @@ task.spawn(function()
         end
 
         if shared.autoFarm and not player.Character then
-            local guiList = gui:GetChildren()
-            for _, guiObj in ipairs(guiList) do
+            for _, guiObj in ipairs(gui:GetChildren()) do
                 if guiObj:IsA("ScreenGui") then
-                    local playButton = guiObj:FindFirstChild("Play", true)
-                    local spinButton = guiObj:FindFirstChild("Spin Fruit", true)
-                    local joinButton = guiObj:FindFirstChild("Join Friend", true)
-                    local afkButton = guiObj:FindFirstChild("AFK World", true)
-                    local rankedButton = guiObj:FindFirstChild("Ranked Matches", true)
+                    -- Tìm tất cả các nút cần thiết dựa vào Text
+                    local playButton, spinButton, joinButton, afkButton, rankedButton
+
+                    for _, btn in ipairs(guiObj:GetDescendants()) do
+                        if btn:IsA("TextButton") then
+                            local text = btn.Text:lower()
+                            if text:find("play") then playButton = btn end
+                            if text:find("spin") then spinButton = btn end
+                            if text:find("join") then joinButton = btn end
+                            if text:find("afk") then afkButton = btn end
+                            if text:find("rank") then rankedButton = btn end
+                        end
+                    end
 
                     if playButton and spinButton and joinButton and afkButton and rankedButton then
-                        print(">> Tìm thấy tất cả các nút.")
+                        print(">> Tìm thấy tất cả các nút qua Text.")
 
                         local allVisible = (
                             playButton.Visible and spinButton.Visible and joinButton.Visible and
                             afkButton.Visible and rankedButton.Visible
                         )
 
-                        print("Play.Visible =", playButton.Visible)
-                        print("Spin.Visible =", spinButton.Visible)
-                        print("Join.Visible =", joinButton.Visible)
-                        print("AFK.Visible =", afkButton.Visible)
-                        print("Ranked.Visible =", rankedButton.Visible)
-
                         local x = playButton.AbsolutePosition.X
-                        print("Play X =", x)
-                        print("Spin X =", spinButton.AbsolutePosition.X)
-                        print("Join X =", joinButton.AbsolutePosition.X)
-                        print("AFK X  =", afkButton.AbsolutePosition.X)
-                        print("Rank X =", rankedButton.AbsolutePosition.X)
-
                         local xAligned = (
                             math.abs(spinButton.AbsolutePosition.X - x) < 5 and
                             math.abs(joinButton.AbsolutePosition.X - x) < 5 and
@@ -305,17 +300,17 @@ task.spawn(function()
                         print(">> xAligned =", xAligned)
 
                         if allVisible and xAligned then
-                            print(">> Điều kiện đầy đủ – đang nhấn nút Play...")
+                            print(">> Điều kiện đủ – nhấn nút Play.")
                             GuiService.SelectedObject = playButton
                             task.wait(0.5)
                             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                             task.wait(0.05)
                             VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
                         else
-                            print(">> Điều kiện chưa đủ – không nhấn.")
+                            print(">> Các nút chưa sẵn sàng để nhấn.")
                         end
                     else
-                        print(">> Không tìm thấy đủ 5 nút.")
+                        print(">> Không tìm thấy đủ các nút bằng Text.")
                     end
                 end
             end
