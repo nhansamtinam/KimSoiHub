@@ -14,7 +14,7 @@ local currentHumanoid = nil
 local characterReady = false
 local lockConnection = nil
 local lockedPosition = nil
-local isTeleported = false
+isTeleported = false
 local connection = nil
 
 local skills = {
