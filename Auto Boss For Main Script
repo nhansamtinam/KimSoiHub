@@ -20,7 +20,6 @@ local function followBoss(bossModel)
     print("[Boss] Đã bị tiêu diệt")
     if shared.autoFarm then
     shared.forceUnlock = false
-    isAnchored = false
     isTeleported = false
     task.wait(1)
     autoFarmToggleRef:SetValue(false)
@@ -46,8 +45,6 @@ task.spawn(function()
                 print("[Marco] Đã xuất hiện")
                 shared.forceUnlock = true
                 task.wait(1)
-                isAnchored = true
-                task.wait(1)
                 followBoss(marco)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Marco")
             else
@@ -60,8 +57,6 @@ task.spawn(function()
                 print("[Cake Queen] Đã xuất hiện")
                 shared.forceUnlock = true
                 task.wait(1)
-                isAnchored = true
-                task.wait(1)
                 followBoss(cakeQueen)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Cake Queen")
             else
@@ -72,8 +67,6 @@ task.spawn(function()
             if katakuri then
                 print("[Katakuri] Đã xuất hiện")
                 shared.forceUnlock = true
-                task.wait(1)
-                isAnchored = true
                 task.wait(1)
                 followBoss(katakuri)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Katakuri")
@@ -86,8 +79,6 @@ task.spawn(function()
             if kaido then
                 print("[Kaido] Đã xuất hiện")
                 shared.forceUnlock = true
-                task.wait(1)
-                isAnchored = true
                 task.wait(1)
                 followBoss(kaido)
                 repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Kaido")
