@@ -2,13 +2,15 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local placeId = game.PlaceId
 
+shared.autoBoss = shared.autoBoss or false
+
 -- Hàm đi theo boss
 local function followBoss(bossModel)
     local hrp = bossModel:FindFirstChild("HumanoidRootPart")
     local humanoid = bossModel:FindFirstChild("Humanoid")
     if not hrp or not humanoid then return end
 
-    while humanoid.Health > 0 do
+    while humanoid.Health > 0 and shared.autoBoss do
         local character = LocalPlayer.Character
         if character and character:FindFirstChild("HumanoidRootPart") then
             character.HumanoidRootPart.CFrame = hrp.CFrame + Vector3.new(0, 5, 0)
@@ -16,7 +18,6 @@ local function followBoss(bossModel)
         task.wait(0.1)
     end
 
-    -- Khi boss đã chết
     print("[Boss] Đã bị tiêu diệt")
 
     if shared.autoFarm then
@@ -33,9 +34,14 @@ local function followBoss(bossModel)
     end
 end
 
--- Hàm kiểm tra boss theo PlaceId
+-- Vòng lặp kiểm tra boss
 task.spawn(function()
     while true do
+        if not shared.autoBoss then
+            task.wait(1)
+            continue
+        end
+
         local npcsFolder = workspace:FindFirstChild("Characters") and workspace.Characters:FindFirstChild("NPCs")
         if not npcsFolder then
             task.wait(1)
@@ -51,7 +57,7 @@ task.spawn(function()
                 bienCaoCap = true
                 task.wait(1)
                 followBoss(marco)
-                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Marco")
+                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Marco") or not shared.autoBoss
             else
                 print("[Marco] Chưa xuất hiện")
             end
@@ -65,7 +71,7 @@ task.spawn(function()
                 bienCaoCap = true
                 task.wait(1)
                 followBoss(cakeQueen)
-                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Cake Queen")
+                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Cake Queen") or not shared.autoBoss
             else
                 print("[Cake Queen] Chưa xuất hiện")
             end
@@ -78,7 +84,7 @@ task.spawn(function()
                 bienCaoCap = true
                 task.wait(1)
                 followBoss(katakuri)
-                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Katakuri")
+                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Katakuri") or not shared.autoBoss
             else
                 print("[Katakuri] Chưa xuất hiện")
             end
@@ -92,7 +98,7 @@ task.spawn(function()
                 bienCaoCap = true
                 task.wait(1)
                 followBoss(kaido)
-                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Kaido")
+                repeat task.wait(0.5) until not npcsFolder:FindFirstChild("Kaido") or not shared.autoBoss
             else
                 print("[Kaido] Chưa xuất hiện")
             end
