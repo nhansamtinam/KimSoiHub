@@ -1,4 +1,4 @@
---Auto Farm !
+--Auto Farm !!!
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -252,7 +252,6 @@ end
 
 task.spawn(function()
     while true do
-        -- Nếu autoFarm tắt, dừng hẳn hoạt động
         if not shared.autoFarm then
             task.wait(2)
             continue
@@ -261,21 +260,44 @@ task.spawn(function()
         -- Nếu autoFarm bật và chưa có nhân vật, thử auto-play
         if shared.autoFarm and not player.Character then
             local guiList = gui:GetChildren()
+
             for _, guiObj in ipairs(guiList) do
                 if guiObj:IsA("ScreenGui") then
                     local playButton = guiObj:FindFirstChild("Play", true)
-                    if playButton and playButton:IsA("GuiButton") then
-                        GuiService.SelectedObject = playButton
-                        task.wait(5)
-                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-                        task.wait(0.05)
-                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                    local spinButton = guiObj:FindFirstChild("Spin Fruit", true)
+                    local joinButton = guiObj:FindFirstChild("Join Friend", true)
+                    local afkButton = guiObj:FindFirstChild("AFK World", true)
+                    local rankedButton = guiObj:FindFirstChild("Ranked Matches", true)
+
+                    if playButton and spinButton and joinButton and afkButton and rankedButton then
+                        -- Kiểm tra thẳng hàng theo trục X
+                        local xAligned = (
+                            playButton.AbsolutePosition.X == spinButton.AbsolutePosition.X and
+                            spinButton.AbsolutePosition.X == joinButton.AbsolutePosition.X and
+                            joinButton.AbsolutePosition.X == afkButton.AbsolutePosition.X and
+                            afkButton.AbsolutePosition.X == rankedButton.AbsolutePosition.X
+                        )
+
+                        -- Kiểm tra xem có hiển thị đầy đủ không
+                        local visibleAll = (
+                            playButton.Visible and spinButton.Visible and joinButton.Visible and
+                            afkButton.Visible and rankedButton.Visible
+                        )
+
+                        if xAligned and visibleAll then
+                            -- Nút đã sẵn sàng, nhấn Play
+                            GuiService.SelectedObject = playButton
+                            task.wait(0.2)
+                            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                            task.wait(0.05)
+                            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+                        end
                     end
                 end
             end
         end
 
-        task.wait(5)
+        task.wait(2)
     end
 end)
 
