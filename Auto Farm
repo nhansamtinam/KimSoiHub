@@ -272,7 +272,7 @@ task.spawn(function()
                     local playButton = guiObj:FindFirstChild("Play", true)
                     if playButton and playButton:IsA("GuiButton") then
                         GuiService.SelectedObject = playButton
-                        task.wait(999999999999999)
+                        task.wait(1)
                         VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
                         task.wait(0.05)
                         VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
