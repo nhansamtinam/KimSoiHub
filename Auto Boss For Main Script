@@ -1,10 +1,3 @@
-if shared.autoFarmToggleRef then
-    shared.autoFarmToggleRef:SetValue(false)
-else
-    warn("[AutoFarm] Toggle chưa được khởi tạo.")
-end
-
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local placeId = game.PlaceId
@@ -23,19 +16,30 @@ local function followBoss(bossModel)
         task.wait(0.1)
     end
 
-    -- Khi boss đã chết
-    print("[Boss] Đã bị tiêu diệt")
-    if shared.autoFarm then
+-- Khi boss đã chết
+print("[Boss] Đã bị tiêu diệt")
+
+if shared.autoFarm then
     shared.forceUnlock = false
     isTeleported = false
     bienCaoCap = false
     task.wait(1)
-    autoFarmToggleRef:SetValue(false)
+
+    if shared.autoFarmToggleRef then
+        shared.autoFarmToggleRef:SetValue(false)
+    else
+        warn("[AutoFarm] Toggle chưa được khởi tạo khi tắt.")
+    end
+
     task.wait(1)
-    autoFarmToggleRef:SetValue(true)
+
+    if shared.autoFarmToggleRef then
+        shared.autoFarmToggleRef:SetValue(true)
+    else
+        warn("[AutoFarm] Toggle chưa được khởi tạo khi bật lại.")
+    end
 else
     print("Không Gọi Hàm Teleport")
-end
 end
 
 -- Hàm kiểm tra boss theo PlaceId
