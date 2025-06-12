@@ -100,7 +100,7 @@ local autoFarmToggleRef = nil
 local autoFarmEnabled = false
 local isTeleported = false
 local bienCaoCap = false
-autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
+shared.autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
     Title = "Start/Stop Farm",
     Default = false,
     Callback = function(value)
@@ -109,7 +109,7 @@ autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
         if value then
             loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Auto%20Farm"))()
             task.wait(10)
-            autoFarmToggleRef:SetValue(false)
+            shared.autoFarmToggleRef:SetValue(false)
         else
             print("Auto Farm đã tắt.")
         end
