@@ -1,3 +1,7 @@
+task.wait(5)
+shared.autoFarmToggleRef:SetValue(false)
+
+
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local placeId = game.PlaceId
