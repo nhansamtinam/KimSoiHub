@@ -118,6 +118,7 @@ local function unlockPosition()
 end
 
 local function fastTeleport()
+    if bienCaoCap then return end
     local character = player.Character or player.CharacterAdded:Wait()
     local hrp = character:WaitForChild("HumanoidRootPart", 5)
     if not hrp then return end
@@ -184,9 +185,10 @@ local function startSkillLoop()
                 unlockPosition()
             end
 
-            if _isInGame and characterReady and currentFruit and skills[currentFruit] and isTeleported then
+            if _isInGame and characterReady and currentFruit and skills[currentFruit] and (bienCaoCap or isTeleported) then
                 for _, skill in ipairs(skills[currentFruit]) do
-                    if not (shared.autoFarm and _isInGame and characterReady and isTeleported) then break end
+                    -- Kiểm tra lại trong vòng for để đảm bảo vẫn đúng điều kiện
+                    if not (shared.autoFarm and _isInGame and characterReady and (bienCaoCap or isTeleported)) then break end
                     castSkill(currentFruit, skill)
                     task.wait(0.15)
                 end
