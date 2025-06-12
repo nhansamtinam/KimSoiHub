@@ -1,5 +1,8 @@
-task.wait(5)
-shared.autoFarmToggleRef:SetValue(false)
+if shared.autoFarmToggleRef then
+    shared.autoFarmToggleRef:SetValue(false)
+else
+    warn("[AutoFarm] Toggle chưa được khởi tạo.")
+end
 
 
 local Players = game:GetService("Players")
