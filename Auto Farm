@@ -251,44 +251,25 @@ if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 end
 
 task.spawn(function()
-    -- Hàm kiểm tra nếu các nút chính đã hiện đủ và khả dụng
-    local function isPlayButtonReady(guiObj)
-        local buttonNames = {"Play", "Spin Fruit", "Join Friend", "AFK World", "Ranked Matches"}
-
-        for _, name in ipairs(buttonNames) do
-            local btn = guiObj:FindFirstChild(name, true)
-            if not btn or not btn:IsA("GuiButton") or not btn.Visible or btn.AbsoluteSize.Y <= 0 then
-                return false
-            end
-        end
-        return true
-    end
-
     while true do
+        -- Nếu autoFarm tắt, dừng hẳn hoạt động
         if not shared.autoFarm then
             task.wait(2)
             continue
         end
 
+        -- Nếu autoFarm bật và chưa có nhân vật, thử auto-play
         if shared.autoFarm and not player.Character then
-            for _, guiObj in ipairs(gui:GetChildren()) do
+            local guiList = gui:GetChildren()
+            for _, guiObj in ipairs(guiList) do
                 if guiObj:IsA("ScreenGui") then
                     local playButton = guiObj:FindFirstChild("Play", true)
                     if playButton and playButton:IsA("GuiButton") then
-                        -- Chờ cho đến khi các nút sẵn sàng
-                        local timeout = os.clock() + 10
-                        while os.clock() < timeout do
-                            if isPlayButtonReady(guiObj) then
-                                GuiService.SelectedObject = playButton
-                                task.wait(0.1)
-                                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-                                task.wait(0.05)
-                                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
-                                break
-                            end
-                            task.wait(0.1)
-                        end
-                        break
+                        GuiService.SelectedObject = playButton
+                        task.wait(5)
+                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+                        task.wait(0.05)
+                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
                     end
                 end
             end
