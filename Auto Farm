@@ -1,4 +1,4 @@
---Auto Farm !!!
+--Auto Farm !
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
