@@ -2,14 +2,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
+import time
 
 # 🔐 Token & cấu hình
-TOKEN = "TOKEN"
+TOKEN = "MTM4NDAyMDY0MjYzNDAwNjYyOA.GxHzDd.dX7GFu49SGet5IRNeTJ9fcrlamsdjxs0ZuNZSE"
 GUILD_ID = 1251733722701627483
 GS_API_URL = "https://script.google.com/macros/s/AKfycbzIwPtpIyifBJg-GKKXVqrBxH_h7xy2Gcbj8nsMgsY-Gq9X4__2qjYj0sjxAywltXn_Wg/exec"
-
-OWNER_ROLE = "Owner"
-BUYER_ROLE = "Buyer"
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -17,10 +15,42 @@ intents.members = True  # ⚠️ Rất quan trọng để check role
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-# ✅ Kiểm tra role
-def has_role(interaction: discord.Interaction, role_name: str):
-    member = interaction.user
-    return any(role.name == role_name for role in getattr(member, 'roles', []))
+# 🕐 Cooldown (giây)
+COOLDOWNS = {
+    "resethwid": 86400,  # 24h
+    "redeem": 600,       # 10 phút
+    "getscript": 5       # 5 giây
+}
+
+# ✅ Role được phép dùng từng lệnh
+COMMAND_ROLES = {
+    "resethwid": ["Buyer", "Owner"],
+    "redeem": ["Member", "Owner"],
+    "getscript": ["Buyer", "Owner"],
+    "createkey": ["Owner"],           
+    "deletekey": ["Owner"]            
+}
+
+# 🧠 Bộ nhớ lưu cooldown
+cooldown_cache = {}
+
+# 🔎 Check role động
+def is_allowed(interaction: discord.Interaction, command: str):
+    allowed_roles = COMMAND_ROLES.get(command, [])
+    return any(role.name in allowed_roles for role in getattr(interaction.user, 'roles', []))
+
+# 🔁 Check cooldown
+def is_on_cooldown(user_id: int, command: str):
+    now = time.time()
+    last_used = cooldown_cache.get((user_id, command), 0)
+    duration = COOLDOWNS.get(command, 0)
+    return now - last_used < duration
+
+def get_cooldown_remaining(user_id: int, command: str):
+    now = time.time()
+    last_used = cooldown_cache.get((user_id, command), 0)
+    duration = COOLDOWNS.get(command, 0)
+    return int(duration - (now - last_used))
 
 # 🔁 Sync khi bot online
 @bot.event
@@ -33,8 +63,8 @@ async def on_ready():
 @app_commands.describe(key="Key bạn muốn tạo")
 async def create_key(interaction: discord.Interaction, key: str):
     await interaction.response.defer(thinking=True, ephemeral=True)
-    if not has_role(interaction, OWNER_ROLE):
-        await interaction.followup.send("✅ Bạn không có quyền dùng lệnh này.")
+    if not is_allowed(interaction, "createkey"):  # mặc định chỉ Owner, nếu muốn thêm thì sửa COMMAND_ROLES
+        await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
         return
     res = requests.post(GS_API_URL, data={"action": "createKey", "key": key})
     await interaction.followup.send(f"```lua\n{res.text}\n```")
@@ -44,7 +74,7 @@ async def create_key(interaction: discord.Interaction, key: str):
 @app_commands.describe(key="Key bạn muốn xóa")
 async def delete_key(interaction: discord.Interaction, key: str):
     await interaction.response.defer(thinking=True, ephemeral=True)
-    if not has_role(interaction, OWNER_ROLE):
+    if not is_allowed(interaction, "deletekey"):
         await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
         return
     res = requests.post(GS_API_URL, data={"action": "deleteKey", "key": key})
@@ -55,13 +85,22 @@ async def delete_key(interaction: discord.Interaction, key: str):
 @app_commands.describe(key="Key bạn có")
 async def redeem_key(interaction: discord.Interaction, key: str):
     await interaction.response.defer(thinking=True, ephemeral=True)
-    discord_id = str(interaction.user.id)
+    user_id = interaction.user.id
+    command = "redeem"
+    
+    if not is_allowed(interaction, command):
+        await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
+        return
+
+    if is_on_cooldown(user_id, command):
+        remain = get_cooldown_remaining(user_id, command)
+        await interaction.followup.send(f"⏳ Bạn cần chờ {remain} giây để dùng lại lệnh này.")
+        return
+
     try:
-        res = requests.post(GS_API_URL, data={"action": "redeemKey", "key": key, "discordID": discord_id})
-        if "Thanks" in res.text.lower():
-            await interaction.followup.send(f"```lua\n{res.text}\n```")
-        else:
-            await interaction.followup.send(f"```lua\n{res.text}\n```")
+        res = requests.post(GS_API_URL, data={"action": "redeemKey", "key": key, "discordID": str(user_id)})
+        cooldown_cache[(user_id, command)] = time.time()
+        await interaction.followup.send(f"```lua\n{res.text}\n```")
     except Exception as e:
         await interaction.followup.send(f"❌ Lỗi kết nối API: {e}")
 
@@ -69,16 +108,22 @@ async def redeem_key(interaction: discord.Interaction, key: str):
 @tree.command(name="resethwid", description="Reset HWID của bạn", guild=discord.Object(id=GUILD_ID))
 async def reset_hwid(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True, ephemeral=True)
-    if not has_role(interaction, BUYER_ROLE):
+    user_id = interaction.user.id
+    command = "resethwid"
+
+    if not is_allowed(interaction, command):
         await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
         return
-    discord_id = str(interaction.user.id)
+
+    if is_on_cooldown(user_id, command):
+        remain = get_cooldown_remaining(user_id, command)
+        await interaction.followup.send(f"⏳ Bạn cần chờ {remain} giây để dùng lại lệnh này.")
+        return
+
     try:
-        res = requests.post(GS_API_URL, data={"action": "resetHWID", "discordID": discord_id})
-        if "SUCCESS !" in res.text.lower():
-            await interaction.followup.send(f"```lua\n{res.text}\n```")
-        else:
-            await interaction.followup.send(f"```lua\n{res.text}\n```")
+        res = requests.post(GS_API_URL, data={"action": "resetHWID", "discordID": str(user_id)})
+        cooldown_cache[(user_id, command)] = time.time()
+        await interaction.followup.send(f"```lua\n{res.text}\n```")
     except Exception as e:
         await interaction.followup.send(f"❌ Lỗi kết nối API: {e}")
 
@@ -86,12 +131,21 @@ async def reset_hwid(interaction: discord.Interaction):
 @tree.command(name="getscript", description="Lấy script của bạn", guild=discord.Object(id=GUILD_ID))
 async def get_script(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True, ephemeral=True)
-    if not has_role(interaction, BUYER_ROLE):
+    user_id = interaction.user.id
+    command = "getscript"
+
+    if not is_allowed(interaction, command):
         await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
         return
-    discord_id = str(interaction.user.id)
+
+    if is_on_cooldown(user_id, command):
+        remain = get_cooldown_remaining(user_id, command)
+        await interaction.followup.send(f"⏳ Bạn cần chờ {remain} giây để dùng lại lệnh này.")
+        return
+
     try:
-        res = requests.post(GS_API_URL, data={"action": "getScript", "discordID": discord_id})
+        res = requests.post(GS_API_URL, data={"action": "getScript", "discordID": str(user_id)})
+        cooldown_cache[(user_id, command)] = time.time()
         await interaction.followup.send(f"```lua\n{res.text}\n```")
     except Exception as e:
         await interaction.followup.send(f"❌ Lỗi kết nối API: {e}")
