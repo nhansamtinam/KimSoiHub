@@ -1,0 +1,100 @@
+import discord
+from discord import app_commands
+from discord.ext import commands
+import requests
+
+# 🔐 Token & cấu hình
+TOKEN = "MTM4NDAyMDY0MjYzNDAwNjYyOA.GRwfp_.gc8sI85HtoelE-9KanoUbAS-XMetvKgPEqI9W4"
+GUILD_ID = 1251733722701627483
+GS_API_URL = "https://script.google.com/macros/s/AKfycbw1lczaLa6xXVCRAgIPVBPMoyTZ_XYipKUFAP_ovd6oCKz3mO_7FBxzovJkzctgJ0ET5Q/exec"
+
+OWNER_ROLE = "Owner"
+BUYER_ROLE = "Buyer"
+
+intents = discord.Intents.default()
+intents.guilds = True
+intents.members = True  # ⚠️ Rất quan trọng để check role
+bot = commands.Bot(command_prefix="!", intents=intents)
+tree = bot.tree
+
+# ✅ Kiểm tra role
+def has_role(interaction: discord.Interaction, role_name: str):
+    member = interaction.user
+    return any(role.name == role_name for role in getattr(member, 'roles', []))
+
+# 🔁 Sync khi bot online
+@bot.event
+async def on_ready():
+    await tree.sync(guild=discord.Object(id=GUILD_ID))
+    print(f"✅ Logged in as {bot.user} | Synced slash commands.")
+
+# 🛠 /createkey
+@tree.command(name="createkey", description="Tạo key mới", guild=discord.Object(id=GUILD_ID))
+@app_commands.describe(key="Key bạn muốn tạo")
+async def create_key(interaction: discord.Interaction, key: str):
+    await interaction.response.defer(thinking=True, ephemeral=True)
+    if not has_role(interaction, OWNER_ROLE):
+        await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
+        return
+    res = requests.post(GS_API_URL, data={"action": "createKey", "key": key})
+    await interaction.followup.send(res.text)
+
+# ❌ /deletekey
+@tree.command(name="deletekey", description="Xóa key", guild=discord.Object(id=GUILD_ID))
+@app_commands.describe(key="Key bạn muốn xóa")
+async def delete_key(interaction: discord.Interaction, key: str):
+    await interaction.response.defer(thinking=True, ephemeral=True)
+    if not has_role(interaction, OWNER_ROLE):
+        await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
+        return
+    res = requests.post(GS_API_URL, data={"action": "deleteKey", "key": key})
+    await interaction.followup.send(res.text)
+
+# 🔓 /redeem
+@tree.command(name="redeem", description="Redeem key của bạn", guild=discord.Object(id=GUILD_ID))
+@app_commands.describe(key="Key bạn có")
+async def redeem_key(interaction: discord.Interaction, key: str):
+    await interaction.response.defer(thinking=True, ephemeral=True)
+    discord_id = str(interaction.user.id)
+    try:
+        res = requests.post(GS_API_URL, data={"action": "redeemKey", "key": key, "discordID": discord_id})
+        if "success" in res.text.lower():
+            await interaction.followup.send("✅ Redeemed Key Success! Vui lòng đợi **5 phút** trước khi sử dụng.")
+        else:
+            await interaction.followup.send(f"⚠️ {res.text}")
+    except Exception as e:
+        await interaction.followup.send(f"❌ Lỗi kết nối API: {e}")
+
+# 🔁 /resethwid
+@tree.command(name="resethwid", description="Reset HWID của bạn", guild=discord.Object(id=GUILD_ID))
+async def reset_hwid(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True, ephemeral=True)
+    if not has_role(interaction, BUYER_ROLE):
+        await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
+        return
+    discord_id = str(interaction.user.id)
+    try:
+        res = requests.post(GS_API_URL, data={"action": "resetHWID", "discordID": discord_id})
+        if "success" in res.text.lower():
+            await interaction.followup.send("✅ RESET HWID SUCCESS! Bạn có thể reset lại sau **24 tiếng**.")
+        else:
+            await interaction.followup.send(f"⚠️ {res.text}")
+    except Exception as e:
+        await interaction.followup.send(f"❌ Lỗi kết nối API: {e}")
+
+# 📜 /getscript
+@tree.command(name="getscript", description="Lấy script của bạn", guild=discord.Object(id=GUILD_ID))
+async def get_script(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True, ephemeral=True)
+    if not has_role(interaction, BUYER_ROLE):
+        await interaction.followup.send("❌ Bạn không có quyền dùng lệnh này.")
+        return
+    discord_id = str(interaction.user.id)
+    try:
+        res = requests.post(GS_API_URL, data={"action": "getScript", "discordID": discord_id})
+        await interaction.followup.send(f"```lua\n{res.text}\n```")
+    except Exception as e:
+        await interaction.followup.send(f"❌ Lỗi kết nối API: {e}")
+
+# ▶️ Khởi động bot
+bot.run(TOKEN)
