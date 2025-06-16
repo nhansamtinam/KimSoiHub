@@ -1,0 +1,139 @@
+function doGet(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const key = e.parameter.key;
+  const hwid = e.parameter.hwid;
+  const now = new Date();
+
+  if (!key || !hwid) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      reason: "Missing key or hwid"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const header = data[0];
+  const keyCol = header.indexOf("Key");
+  const hwidCol = header.indexOf("HWID");
+  const resetCol = header.indexOf("LastReset");
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][keyCol] === key) {
+      const currentHWID = data[i][hwidCol];
+
+      if (currentHWID === "" || currentHWID === hwid) {
+        // ✅ Gán HWID nếu chưa có
+        sheet.getRange(i + 1, hwidCol + 1).setValue(hwid);
+        sheet.getRange(i + 1, resetCol + 1).setValue(now.toISOString());
+
+        return ContentService.createTextOutput(JSON.stringify({
+          success: true,
+          message:"Đúng"
+        })).setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          reason: "HWID không khớp"
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+  }
+
+  // ❌ Key không tồn tại
+  return ContentService.createTextOutput(JSON.stringify({
+    success: false,
+    reason: "Key không tồn tại"
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Trang tính1");
+  const data = sheet.getDataRange().getValues();
+  const action = e.parameter.action;
+
+  if (!action) {
+    return ContentService.createTextOutput("Missing action").setMimeType(ContentService.MimeType.TEXT);
+  }
+
+if (action === "createKey") {
+  const key = e.parameter.key;
+  if (!key) {
+    return ContentService.createTextOutput("Missing key");
+  }
+
+  const lastRow = sheet.getMaxRows(); // Tổng số dòng (kể cả trống)
+
+  for (let i = 1; i <= lastRow; i++) {
+    const cellValue = sheet.getRange(i + 1, 1).getValue(); // Cột A (Key)
+    if (!cellValue) {
+      sheet.getRange(i + 1, 1).setValue(key);        // A: Key
+      sheet.getRange(i + 1, 2).setValue("Locked");   // B: HWID
+      sheet.getRange(i + 1, 3).setValue("");         // C: Discord ID
+      sheet.getRange(i + 1, 4).setValue("No");       // D: Redeemed
+
+      return ContentService.createTextOutput("Key Created: " + key);
+    }
+  }
+
+  return ContentService.createTextOutput("No space to create key.");
+}
+
+  if (action === "deleteKey") {
+    const key = e.parameter.key;
+    if (!key) return ContentService.createTextOutput("Missing key");
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === key) {
+        sheet.deleteRow(i + 1);
+        return ContentService.createTextOutput("Deleted Key:" + key);
+      }
+    }
+    return ContentService.createTextOutput("Key Not Found.");
+  }
+
+  if (action === "redeemKey") {
+    const key = e.parameter.key;
+    const discordID = e.parameter.discordID;
+    if (!key || !discordID) return ContentService.createTextOutput("Missing key or discordID");
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === key) {
+        sheet.getRange(i + 1, 2).setValue("");              // Clear HWID
+        sheet.getRange(i + 1, 3).setValue(discordID);       // Set Discord ID
+        sheet.getRange(i + 1, 4).setValue("Yes");           // Mark as Redeemed
+        return ContentService.createTextOutput("Thanks You For Your Purchase!, Your Key:" + key);
+      }
+    }
+    return ContentService.createTextOutput("Key not found.");
+  }
+
+  if (action === "resetHWID") {
+    const discordID = e.parameter.discordID;
+    if (!discordID) return ContentService.createTextOutput("Missing discordID");
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][2] == discordID) {
+        sheet.getRange(i + 1, 2).setValue(""); // Clear HWID
+        return ContentService.createTextOutput("RESET HWID SUCESS !");
+      }
+    }
+    return ContentService.createTextOutput("Discord ID not found.");
+  }
+
+  if (action === "getScript") {
+    const discordID = e.parameter.discordID;
+    if (!discordID) return ContentService.createTextOutput("Missing discordID");
+
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][2] == discordID) {
+        const key = data[i][0];
+        const script = `getgenv().Key = "${key}"\nloadstring(game:HttpGet("https://raw.githubusercontent.com/Save-KimSoiHub/Script/refs/heads/main/Key%20System"))()`;
+        return ContentService.createTextOutput(script).setMimeType(ContentService.MimeType.TEXT);
+      }
+    }
+    return ContentService.createTextOutput("No key found for this Discord ID.");
+  }
+
+  return ContentService.createTextOutput("Unknown action: " + action);
+}
