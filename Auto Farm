@@ -1,4 +1,16 @@
---Auto Farm !!!
+-- Auto Farm
+local autoFarmToggleRef = nil
+local autoFarmEnabled = false
+local isTeleported = false
+local bienCaoCap = false
+shared.autoFarmToggleRef = Tabs.Main:AddToggle("AutoFarmToggle", {
+    Title = "Auto Farm",
+    Default = false,
+    Callback = function(value)
+        autoFarmEnabled = value
+        shared.autoFarm = value
+        if value then
+	--Auto Farm 
 shared.autoFarm = shared.autoFarm or false
 shared.forceUnlock = shared.forceUnlock or false
 local Players = game:GetService("Players")
@@ -16,6 +28,83 @@ local lockConnection = nil
 local lockedPosition = nil
 isTeleported = false
 local connection = nil
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local GuiService = game:GetService("GuiService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+-- Tìm nút Ranked
+local function findRankedButton()
+    for _, guiObj in ipairs(player:WaitForChild("PlayerGui"):GetChildren()) do
+        if guiObj:IsA("ScreenGui") then
+            for _, obj in ipairs(guiObj:GetDescendants()) do
+                if obj:IsA("GuiButton") and obj.Visible and obj.Name == "Ranked" then
+                    return obj
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- Tìm nút Play
+local function findPlayButton()
+    for _, guiObj in ipairs(player:WaitForChild("PlayerGui"):GetChildren()) do
+        if guiObj:IsA("ScreenGui") then
+            local btn = guiObj:FindFirstChild("Play", true)
+            if btn and btn:IsA("GuiButton") and btn.Visible then
+                return btn
+            end
+        end
+    end
+    return nil
+end
+
+-- Kiểm tra nút đứng yên tuyệt đối trong vài frame
+local function waitUntilStable(button, frameCount, timeout)
+    local lastPos = button.AbsolutePosition
+    local stableFrames = 0
+    local startTime = tick()
+
+    while tick() - startTime < timeout do
+        if not button:IsDescendantOf(game) or not button.Visible then
+            stableFrames = 0
+            lastPos = button.AbsolutePosition
+            task.wait()
+            continue
+        end
+
+        local nowPos = button.AbsolutePosition
+        if (nowPos - lastPos).magnitude == 0 then
+            stableFrames += 1
+            if stableFrames >= frameCount then
+                return true
+            end
+        else
+            stableFrames = 0
+        end
+
+        lastPos = nowPos
+        task.wait() -- Mỗi frame
+    end
+
+    return false
+end
+
+-- Nhấn nút Play
+local function pressPlay(playBtn)
+    if playBtn and playBtn:IsA("GuiButton") and playBtn.Visible then
+        GuiService.SelectedObject = playBtn
+        task.wait(0.05)
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+        task.wait(0.05)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+        print("[AutoPlay] Đã nhấn nút Play.")
+        return true
+    end
+    return false
+end
 
 local skills = {
     Barrier = {"Barrier", "Bubble", "Crash", "Spikes"},
@@ -135,9 +224,18 @@ local function fastTeleport()
     isTeleported = true
 end
 
+local skillType1 = {
+    "Muddle"
+}
+
+local skillType2 = {
+    "PiercingShine"
+}
+
 local function castSkill(fruit, skill)
     if not fruit or not skill then return end
     if not isSkillReady(skill) then return end
+
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
@@ -148,23 +246,74 @@ local function castSkill(fruit, skill)
         Normal = Vector3.yAxis,
         Direction = dir,
         Origin = hrp.Position,
-        Instance = workspace.Map:FindFirstChildWhichIsA("BasePart") or workspace.Terrain,
+        Instance = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChildWhichIsA("BasePart") or workspace.Terrain,
         Distance = (target - hrp.Position).Magnitude,
         Material = Enum.Material.Grass,
         Position = target
     }
 
+    -- Nếu là skill dạng 1 (dùng FireServer đơn giản)
+    if table.find(skillType1, skill) then
+        local args = {
+            fruit,
+            skill,
+            {}
+        }
+
+        local success, err = pcall(function()
+            game:GetService("ReplicatedStorage"):WaitForChild("ReplicatorNoYield"):FireServer(unpack(args))
+        end)
+
+        if not success then
+            warn("[castSkill - dạng 1] Lỗi:", err)
+        end
+        return
+    end
+
+    -- Nếu là skill dạng 2 (dùng InvokeServer với Raycast đơn giản)
+    if table.find(skillType2, skill) then
+        local args = {
+            fruit,
+            skill,
+            {
+                Raycast = {
+                    Normal = Vector3.yAxis,
+                    Direction = Vector3.new(0, -1, 0),
+                    Origin = hrp.Position,
+                    Instance = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChildWhichIsA("BasePart") or workspace.Terrain,
+                    Distance = 30,
+                    Material = Enum.Material.Grass,
+                    Position = hrp.Position
+                }
+            }
+        }
+
+        local success, err = pcall(function()
+            game:GetService("ReplicatedStorage"):WaitForChild("Replicator"):InvokeServer(unpack(args))
+        end)
+
+        if not success then
+            warn("[castSkill - dạng 2] Lỗi:", err)
+        end
+        return
+    end
+
+    -- Mặc định: dùng InvokeServer với Ground + MouseRay + ClientData
     local success, err = pcall(function()
-        ReplicatedStorage.Replicator:InvokeServer(fruit, skill, {
+        game:GetService("ReplicatedStorage"):WaitForChild("Replicator"):InvokeServer(fruit, skill, {
             Ground = {Position = target},
             MouseRay = ray
         })
-        ReplicatedStorage.ReplicatorNoYield:FireServer("ClientData", "UpdateData", {
+
+        game:GetService("ReplicatedStorage"):WaitForChild("ReplicatorNoYield"):FireServer("ClientData", "UpdateData", {
             RootCF = hrp.CFrame,
             MouseRay = ray
         })
     end)
-    if not success then warn("[castSkill] Lỗi:", err) end
+
+    if not success then
+        warn("[castSkill - mặc định] Lỗi:", err)
+    end
 end
 
 local skillLoopRunning = false
@@ -258,32 +407,45 @@ local player = Players.LocalPlayer
 
 task.spawn(function()
     while true do
-        -- Nếu autoFarm tắt, dừng hẳn hoạt động
         if not shared.autoFarm then
-            task.wait(2)
+            task.wait(1)
             continue
         end
 
-        -- Nếu autoFarm bật và chưa có nhân vật, thử auto-play
-        if shared.autoFarm and not player.Character then
-            local guiList = gui:GetChildren()
-            for _, guiObj in ipairs(guiList) do
-                if guiObj:IsA("ScreenGui") then
-                    local playButton = guiObj:FindFirstChild("Play", true)
-                    if playButton and playButton:IsA("GuiButton") then
-                        GuiService.SelectedObject = playButton
-                        task.wait(1)
-                        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
-                        task.wait(0.05)
-                        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+        if not player.Character then
+            local ranked = findRankedButton()
+            local playBtn = findPlayButton()
+
+            if ranked and playBtn then
+                print("[AutoPlay] Đã thấy Ranked. Đợi ổn định 3 frame...")
+                if waitUntilStable(ranked, 3, 5) then
+                    print("[AutoPlay] Ranked đã ổn định. Nhấn Play...")
+                    if pressPlay(playBtn) then
+                        local confirmStart = tick()
+                        while tick() - confirmStart < 10 do
+                            if player.Character or not playBtn.Visible then
+                                print("[AutoPlay] Vào game OK.")
+                                break
+                            end
+                            task.wait(0.2)
+                        end
                     end
+                else
+                    print("[AutoPlay] Không ổn định kịp.")
                 end
+            else
+                print("[AutoPlay] Chưa tìm thấy nút cần.")
             end
         end
 
-        task.wait(5)
+        task.wait(0.5)
     end
 end)
 
 watchSlotChanges()
 startSkillLoop()
+        else
+            print("Auto Farm đã tắt.")
+        end
+    end
+})
