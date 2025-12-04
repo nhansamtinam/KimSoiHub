@@ -3,6 +3,8 @@ namespace first{
 }
 
 int main () {
+	using namespace std;
+	// using namespace first;
 	int = 0;
 	cout << first :: x; // output: 1
 	return 0;
