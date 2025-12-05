@@ -9,3 +9,4 @@ int main () {
 	cout << first :: x; // output: 1
 	return 0;
 }
+dieu kien ? lenh neu dung : lenh neu sai;
