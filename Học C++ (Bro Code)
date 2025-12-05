@@ -18,3 +18,4 @@ s.lenght();
 s.clear();
 s.at(index);
 s.insert(index,value);
+s.find('char'); // output: index
