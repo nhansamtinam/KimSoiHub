@@ -20,3 +20,6 @@ s.at(index);
 s.insert(index,value);
 s.find('char'); // output: index
 s.erase(begin index,end index); // delete char in zone
+
+srand(time(NULL));
+int num = rand();
