@@ -1,38 +1,25 @@
---Main Updated 
+--Main !!!
 repeat wait() until game:IsLoaded() and game.Players.LocalPlayer
-
-getgenv().Key = "trongkim19052009"
-local validKeys = {
-    ["trongkim19052009"] = true,
-}
-
-local player = game.Players.LocalPlayer
-task.wait(1)
-
-if not validKeys[getgenv().Key] then
-    player:Kick("Key sai?. Bạn đã bị loại.")
-    return
-end
 
 game.StarterGui:SetCore("SendNotification", {
     Title = "KimSoi Hub",
-    Text = "Đã Tải Xong",
+    Text = "Success !",
     Duration = 10,
-    Icon = "rbxassetid://138706932256796"
+    Icon = "rbxassetid://93005671600086"
 })
 
 task.wait(1.5)
 
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/Save-KimSoiHub/Script/refs/heads/main/Auto%20Load.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "KimSoi Hub",
+    Title = "KimSoi Hub [Pickaxe Tycoon]",
     SubTitle = "By KimSoi",
     TabWidth = 160,
     Size = UDim2.fromOffset(540, 450),
-    Acrylic = true,
+    Acrylic = false,
     Theme = "Default",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
@@ -40,7 +27,9 @@ local Window = Fluent:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" }),
-    Setting = Window:AddTab({ Title = "Setting",Icon = ""})
+    Webhook = Window:AddTab({ Title = "Webhook", Icon = "" }),
+    Setting = Window:AddTab({ Title = "Setting",Icon = ""}),
+    Discord = Window:AddTab({ Title = "Discord",Icon = ""})
 }
 InterfaceManager:SetLibrary(Fluent)
 SaveManager:SetLibrary(Fluent)
@@ -73,7 +62,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(0, 60, 0, 60)
 ImageLabel.BackgroundTransparency = 1
-ImageLabel.Image = "rbxassetid://138706932256796"
+ImageLabel.Image = "rbxassetid://93005671600086"
 
 TextButton.Name = "HotkeyButton"
 TextButton.Parent = Frame
@@ -81,14 +70,16 @@ TextButton.Size = UDim2.new(1, 0, 1, 0)
 TextButton.BackgroundTransparency = 1
 TextButton.Text = ""
 
+local VirtualInputManager = game:GetService("VirtualInputManager")
+TextButton.MouseButton1Down:Connect(function()
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
+    task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
+end)
 local lighting = game:GetService("Lighting")
 local terrain = workspace.Terrain
 local player = game:GetService("Players").LocalPlayer
 -- Hàm Button
--- =========================
--- HÀM BUTTON TỔNG
--- =========================
-
 local player = game.Players.LocalPlayer
 local hrp = player.Character or player.CharacterAdded:Wait()
 hrp = hrp:WaitForChild("HumanoidRootPart")
@@ -238,6 +229,10 @@ Tabs.Main:AddButton({
         PressButton("Buttons", "ButtonMerge")
     end
 })
+
+local lighting = game:GetService("Lighting")
+local terrain = workspace.Terrain
+local player = game:GetService("Players").LocalPlayer
 
 -- Lưu GUI hiện tại (nếu có) để xóa khi đổi chế độ
 local screenGuiOverlay = nil
@@ -460,6 +455,14 @@ Tabs.Misc:AddToggle("Anti AFK", {
         end
     end
 })
+--Fly Script
+Tabs.Misc:AddButton({
+    Title = "Fly Script",
+    Callback = function()
+       --ARCEUS X FLY V2 SCRIPT
+loadstring("\108\111\97\100\115\116\114\105\110\103\40\103\97\109\101\58\72\116\116\112\71\101\116\40\40\39\104\116\116\112\115\58\47\47\103\105\115\116\46\103\105\116\104\117\98\117\115\101\114\99\111\110\116\101\110\116\46\99\111\109\47\109\101\111\122\111\110\101\89\84\47\98\102\48\51\55\100\102\102\57\102\48\97\55\48\48\49\55\51\48\52\100\100\100\54\55\102\100\99\100\51\55\48\47\114\97\119\47\101\49\52\101\55\52\102\52\50\53\98\48\54\48\100\102\53\50\51\51\52\51\99\102\51\48\98\55\56\55\48\55\52\101\98\51\99\53\100\50\47\97\114\99\101\117\115\37\50\53\50\48\120\37\50\53\50\48\102\108\121\37\50\53\50\48\50\37\50\53\50\48\111\98\102\108\117\99\97\116\111\114\39\41\44\116\114\117\101\41\41\40\41\10\10")()
+    end
+})
 --Sever Hop
 Tabs.Sever:AddButton({
     Title = "Sever Hop",
@@ -476,20 +479,63 @@ Tabs.Sever:AddButton({
         loadstring(game:HttpGet("https://raw.githubusercontent.com/nhansamtinam/KimSoiHub/refs/heads/main/Sever%20Hop%20Less%20Player"))()
     end
 })
-SaveManager:LoadAutoloadConfig()
-updateConfigListDropdown()
+Tabs.Discord:AddParagraph({
+    Title = "Join My Discord For More",
+    Content = "You Can Suggest Improvements To The Script"
+})
 
-local autoloadConfig = SaveManager:GetAutoloadConfig()
-if autoloadConfig and autoloadConfig ~= "" then
-    task.delay(0, function()
-        SaveManager:LoadConfig(autoloadConfig)
-        game.StarterGui:SetCore("SendNotification", {
-            Title = "Autoload",
-            Text = "Đã tự động load config: " .. autoloadConfig,
-            Duration = 5,
-            Icon = "rbxassetid://138706932256796"
-        })
+Tabs.Discord:AddButton({
+    Title = "Click To Copy Link Discord !",
+    Callback = function()
+       setclipboard("https://discord.gg/9DnNZqUS4E")
+    end
+})
+
+task.defer(function()
+    -- Nếu chưa có file, tạo AutoSave
+    if not isfile(SaveManager.LastConfigFile) then
+        writefile(SaveManager.LastConfigFile, "AutoSave")
+    end
+
+    -- ⏳ Delay để đảm bảo GUI & toggle đã được load từ config
+    task.delay(1, function()
+        local toggle = SaveManager.Options.SaveManager_AutoLoad
+        local isToggleOn = toggle and toggle.Value or false
+        SaveManager.AutoLoadEnabled = isToggleOn
+
+        if isToggleOn then
+            SaveManager:AutoLoadLastUsed()
+        else
+            warn("[SaveManager] Auto-load is disabled by toggle.")
+        end
     end)
-end
 
-Tabs.Setting:AddParagraph("AutoloadInfo", "Config tự động load hiện tại: " .. (autoloadConfig or "Không có"))
+    -- 🔁 Auto save khi thay đổi
+    local HttpService = game:GetService("HttpService")
+    local lastData = ""
+
+    task.spawn(function()
+        while true do
+            task.wait(3)
+
+            local configFile = readfile(SaveManager.LastConfigFile)
+            if configFile and configFile ~= "" then
+                local success, encoded = pcall(function()
+                    local data = { objects = {} }
+                    for idx, option in next, SaveManager.Options do
+                        if SaveManager.Parser[option.Type] and not SaveManager.Ignore[idx] then
+                            table.insert(data.objects, SaveManager.Parser[option.Type].Save(idx, option))
+                        end
+                    end
+                    return HttpService:JSONEncode(data)
+                end)
+
+                if success and encoded ~= lastData then
+                    lastData = encoded
+                    writefile(SaveManager.Folder .. "/settings/" .. configFile .. ".json", encoded)
+                    print("[SaveManager] Auto-saved config:", configFile)
+                end
+            end
+        end
+    end)
+end)
